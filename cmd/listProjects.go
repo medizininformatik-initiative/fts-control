@@ -11,8 +11,8 @@ import (
 
 // listProjectsCmd represents the listProjects command
 var listProjectsCmd = &cobra.Command{
-	Use:   "listProjects",
-	Short: "A brief description of your command",
+	Use:   "listProjects", // /api/v2/projects
+	Short: "List available projects",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 

@@ -12,7 +12,7 @@ import (
 // processStatusCmd represents the processStatus command
 var processStatusCmd = &cobra.Command{
 	Use:   "processStatus",
-	Short: "A brief description of your command",
+	Short: "Show process status",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 

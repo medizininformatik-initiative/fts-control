@@ -11,14 +11,9 @@ import (
 
 // startTransferCmd represents the startTransfer command
 var startTransferCmd = &cobra.Command{
-	Use:   "startTransfer",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "startTransfer", // /api/v2/process/{project}/start
+	Short: "Start a transfer process",
+	Long:  `Start a transfer of patients with IDs given in the request body or if empty start a transfer of all consented patients.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("startTransfer called")
 	},

@@ -5,14 +5,13 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // listProcessesCmd represents the listProcesses command
 var listProcessesCmd = &cobra.Command{
 	Use:   "listProcesses",
-	Short: "A brief description of your command",
+	Short: "List of all transfer process statuses",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -36,4 +35,14 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// listProcessesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+type ListProcesses struct {
+}
+
+func GetListProcesses() {
+}
+
+func GetListProcessesData(baseAPI string) []byte {
+	return nil
 }

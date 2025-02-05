@@ -12,7 +12,7 @@ import (
 // projectConfigCmd represents the projectConfig command
 var projectConfigCmd = &cobra.Command{
 	Use:   "projectConfig",
-	Short: "A brief description of your command",
+	Short: "Project configuration",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
