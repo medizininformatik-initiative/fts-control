@@ -1,4 +1,4 @@
-module v1
+module ftsctl
 
 go 1.22.2
 
