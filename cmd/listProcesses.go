@@ -8,6 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Project represents a single project.
+type Project struct {
+}
+
+// ProjectsResponse response structure of the endpoint /api/v2/projects
+type ProjectsResponse struct {
+	Projects []Project `json:"projects"` // list of projects
+}
+
 // listProcessesCmd represents the listProcesses command
 var listProcessesCmd = &cobra.Command{
 	Use:   "listProcesses",
