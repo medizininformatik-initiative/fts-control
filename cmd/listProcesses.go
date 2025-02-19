@@ -1,21 +1,9 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"fmt"
 	"github.com/spf13/cobra"
 )
-
-// Project represents a single project.
-type Project struct {
-}
-
-// ProjectsResponse response structure of the endpoint /api/v2/projects
-type ProjectsResponse struct {
-	Projects []Project `json:"projects"` // list of projects
-}
 
 // listProcessesCmd represents the listProcesses command
 var listProcessesCmd = &cobra.Command{
@@ -44,14 +32,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// listProcessesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-type ListProcesses struct {
-}
-
-func GetListProcesses() {
-}
-
-func GetListProcessesData(baseAPI string) []byte {
-	return nil
 }
