@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,29 +10,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-/*
-// Project represents a single project.
-type Project struct {
-}
-
-// ProjectsResponse response structure of the endpoint /api/v2/projects
-type ProjectsResponse struct {
-	Projects []Project `json:"projects"` // list of projects
-}
-*/
 // listProjectsCmd represents the listProjects command
 var listProjectsCmd = &cobra.Command{
 	Use:   "listProjects", // /api/v2/projects
 	Short: "List available projects",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: `Cheese triangles cheesy feet emmental. 
+	Emmental swiss cut the cheese gouda parmesan monterey jack lancashire cheeseburger. 
+	Macaroni cheese chalk and cheese jarlsberg ricotta cow fondue ricotta mascarpone. 
+	Port-salut hard cheese caerphilly babybel lancashire melted cheese.`,
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// API endpoint
-		url := "http://0.0.0.0:32772/api/v2/projects"
+		//TODO outsource to yaml-config for ez changes
+		url := "http://localhost:8080/api/v2/projects"
 
 		// Create HTTP client
 		client := &http.Client{}
@@ -41,9 +32,6 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Fatalf("Error creating the request: %v", err)
 		}
-
-		// Optional: Add headers (e.g., Authorization, Content-Type, etc.)
-		// req.Header.Add("Accept", "application/json")
 
 		// Send the request
 		resp, err := client.Do(req)
@@ -55,7 +43,7 @@ to quickly create a Cobra application.`,
 
 		// Check the status code
 		if resp.StatusCode != http.StatusOK {
-			log.Fatalf("Unexpected status code: %d", resp.StatusCode)
+			log.Fatalf("Unexpected stats code: %d", resp.StatusCode)
 		}
 
 		// Read the response body
@@ -64,8 +52,26 @@ to quickly create a Cobra application.`,
 			log.Fatalf("Error reading the response: %v", err)
 		}
 
-		// Print the response
-		fmt.Printf("Response: %s\n", string(body))
+		//
+		// json formating
+		//
+
+		// Slice for projects
+		var sliceProjects []string
+
+		// JSON unmarshal
+		err = json.Unmarshal([]byte(body), &sliceProjects)
+		if err != nil {
+			fmt.Println("Unmarshal error:", err)
+			return
+		}
+
+		// Output
+		fmt.Printf("List of all available projects:\n----------\n")
+		for i, sliceProjects := range sliceProjects {
+			fmt.Printf("%d. %s\n", i+1, sliceProjects)
+		}
+		fmt.Println("----------")
 	},
 }
 
