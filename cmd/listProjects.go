@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 // listProjectsCmd represents the listProjects command
@@ -20,17 +21,22 @@ Macaroni cheese chalk and cheese jarlsberg ricotta cow fondue ricotta mascarpone
 Port-salut hard cheese caerphilly babybel lancashire melted cheese.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		// API endpoint
 
-		// import baseUrl from config.yaml
-		baseUrl := viper.GetString("api.base_url")
-		if baseUrl == "" {
-			log.Fatal("Base API URL is not set in the configuration")
+		// Import baseUrl from config.yaml
+		baseUrlString := viper.GetString("api.base_url")
+		if baseUrlString == "" {
+			log.Fatal("Base API URL is not set in the configuration file")
 		}
 
-		// join baseUrl with api-route
-		// ONLY for path NOT for addresses (removes double //) apiUrl := path.Join(baseUrl, "/api/v2/projects")
-		apiUrl := fmt.Sprintf("%s/api/v2/projects", baseUrl)
+		// Parse baseUrl into url.URL
+		baseUrl, err := url.Parse(baseUrlString)
+		if err != nil {
+			log.Fatalf("Invalid URL format: %v", err)
+		}
+
+		// Add the API endpoint to baseUrl
+		apiUrl := baseUrl.ResolveReference(&url.URL{Path: "/api/v2/projects"}).String()
+
 		// Create HTTP client
 		client := &http.Client{}
 
@@ -71,7 +77,7 @@ Port-salut hard cheese caerphilly babybel lancashire melted cheese.`,
 		var sliceProjects []string
 
 		// JSON unmarshal
-		err = json.Unmarshal([]byte(body), &sliceProjects)
+		err = json.Unmarshal(body, &sliceProjects)
 		if err != nil {
 			fmt.Println("Unmarshal error:", err)
 			return
