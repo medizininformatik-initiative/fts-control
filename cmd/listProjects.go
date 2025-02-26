@@ -3,32 +3,39 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"io"
 	"log"
 	"net/http"
-
-	"github.com/spf13/cobra"
 )
 
 // listProjectsCmd represents the listProjects command
 var listProjectsCmd = &cobra.Command{
 	Use:   "listProjects", // /api/v2/projects
 	Short: "List available projects",
-	Long: `Cheese triangles cheesy feet emmental. 
-	Emmental swiss cut the cheese gouda parmesan monterey jack lancashire cheeseburger. 
-	Macaroni cheese chalk and cheese jarlsberg ricotta cow fondue ricotta mascarpone. 
-	Port-salut hard cheese caerphilly babybel lancashire melted cheese.`,
+	Long: `Cheese triangles cheesy feet emmental.
+Emmental swiss cut the cheese gouda parmesan monterey jack lancashire cheeseburger. 
+Macaroni cheese chalk and cheese jarlsberg ricotta cow fondue ricotta mascarpone. 
+Port-salut hard cheese caerphilly babybel lancashire melted cheese.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		// API endpoint
-		//TODO outsource to yaml-config for ez changes
-		url := "http://localhost:8080/api/v2/projects"
 
+		// import baseUrl from config.yaml
+		baseUrl := viper.GetString("api.base_url")
+		if baseUrl == "" {
+			log.Fatal("Base API URL is not set in the configuration")
+		}
+
+		// join baseUrl with api-route
+		// ONLY for path NOT for addresses (removes double //) apiUrl := path.Join(baseUrl, "/api/v2/projects")
+		apiUrl := fmt.Sprintf("%s/api/v2/projects", baseUrl)
 		// Create HTTP client
 		client := &http.Client{}
 
 		// Create a new HTTP GET request
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest("GET", apiUrl, nil)
 		if err != nil {
 			log.Fatalf("Error creating the request: %v", err)
 		}
@@ -39,15 +46,19 @@ var listProjectsCmd = &cobra.Command{
 			log.Fatalf("Error sending the request: %v", err)
 		}
 
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				log.Printf("Error closing response body: %v", err)
+			}
+		}()
 
-		// Check the status code
+		// Check the status code (StatusOk = 200)
 		if resp.StatusCode != http.StatusOK {
 			log.Fatalf("Unexpected stats code: %d", resp.StatusCode)
 		}
 
 		// Read the response body
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatalf("Error reading the response: %v", err)
 		}
@@ -67,15 +78,26 @@ var listProjectsCmd = &cobra.Command{
 		}
 
 		// Output
-		fmt.Printf("List of all available projects:\n----------\n")
+		fmt.Printf("List of all available projects:\n---------------------------------\n")
 		for i, sliceProjects := range sliceProjects {
 			fmt.Printf("%d. %s\n", i+1, sliceProjects)
 		}
-		fmt.Println("----------")
+		fmt.Println("---------------------------------")
 	},
 }
 
 func init() {
+
+	// load config.yaml
+	viper.SetConfigName("config") // Filename
+	viper.SetConfigType("yaml")   // Filetype
+	viper.AddConfigPath("..")     // directory where the file is located
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("Error reading config file: %v", err)
+	}
+
 	rootCmd.AddCommand(listProjectsCmd)
 
 	// Here you will define your flags and configuration settings.
