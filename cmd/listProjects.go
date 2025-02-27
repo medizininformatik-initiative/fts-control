@@ -8,34 +8,18 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 )
 
 // listProjectsCmd represents the listProjects command
 var listProjectsCmd = &cobra.Command{
 	Use:   "listProjects", // /api/v2/projects
 	Short: "List available projects",
-	Long: `Cheese triangles cheesy feet emmental.
-Emmental swiss cut the cheese gouda parmesan monterey jack lancashire cheeseburger. 
-Macaroni cheese chalk and cheese jarlsberg ricotta cow fondue ricotta mascarpone. 
-Port-salut hard cheese caerphilly babybel lancashire melted cheese.`,
+	Long:  `List all available projects from the API.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// Import baseUrl from config.yaml
-		baseUrlString := viper.GetString("api.base_url")
-		if baseUrlString == "" {
-			log.Fatal("Base API URL is not set in the configuration file")
-		}
-
-		// Parse baseUrl into url.URL
-		baseUrl, err := url.Parse(baseUrlString)
-		if err != nil {
-			log.Fatalf("Invalid URL format: %v", err)
-		}
-
-		// Add the API endpoint to baseUrl
-		apiUrl := baseUrl.ResolveReference(&url.URL{Path: "/api/v2/projects"}).String()
+		// Generate API URL
+		apiUrl := BuildApiUrl("/api/v2/projects")
 
 		// Create HTTP client
 		client := &http.Client{}
