@@ -5,6 +5,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// struct for a single Process
+type Process struct {
+	ProcessID           string     `json:"processId"`
+	Phase               string     `json:"phase"`
+	CreatedAt           TimeArray  `json:"createdAt"`
+	FinishedAt          *TimeArray `json:"finishedAt"`
+	TotalPatients       int        `json:"totalPatients"`
+	TotalBundles        int        `json:"totalBundles"`
+	DeidentifiedBundles int        `json:"deidentifiedBundles"`
+	SentBundles         int        `json:"sentBundles"`
+	SkippedBundles      int        `json:"skippedBundles"`
+}
+
+type TimeArray [7]int
+
 // listProcessesCmd represents the listProcesses command
 var listProcessesCmd = &cobra.Command{
 	Use:   "listProcesses",
