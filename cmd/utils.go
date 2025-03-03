@@ -3,6 +3,7 @@ package cmd
 import (
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -18,6 +19,10 @@ type Process struct {
 	DeidentifiedBundles int        `json:"deidentifiedBundles"`
 	SentBundles         int        `json:"sentBundles"`
 	SkippedBundles      int        `json:"skippedBundles"`
+}
+
+func (t TimeArray) ToTime() time.Time {
+	return time.Date(t[0], time.Month(t[1]), t[2], t[3], t[4], t[5], t[6], time.UTC)
 }
 
 // GetBaseURL Import baseUrl from config.yaml
