@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-type TimeArray [7]int
-
 // listProcessesCmd represents the listProcesses command
 var listProcessesCmd = &cobra.Command{
 	Use:   "listProcesses",
@@ -57,8 +55,9 @@ to quickly create a Cobra application.`,
 			log.Fatalf("Error parsing JSON: %v", err)
 		}
 
+		fmt.Println("------------------------------------------------------------------")
 		fmt.Println("List of all transfer process statuses:")
-		fmt.Println("---------------------------------")
+		fmt.Println("------------------------------------------------------------------")
 		for _, p := range processes {
 			fmt.Printf("ProcessID: %s\n", p.ProcessID)
 			fmt.Printf("Phase: %s\n", p.Phase)
@@ -73,7 +72,7 @@ to quickly create a Cobra application.`,
 			fmt.Printf("DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
 			fmt.Printf("SentBundles: %d\n", p.SentBundles)
 			fmt.Printf("SkippedBundles: %d\n", p.SkippedBundles)
-			fmt.Println("---------------------------------")
+			fmt.Println("------------------------------------------------------------------")
 		}
 	},
 }
@@ -81,13 +80,4 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(listProcessesCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// listProcessesCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// listProcessesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
