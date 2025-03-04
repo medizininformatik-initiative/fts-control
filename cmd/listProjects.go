@@ -68,11 +68,13 @@ var listProjectsCmd = &cobra.Command{
 		}
 
 		// Output
-		fmt.Printf("List of all available projects:\n---------------------------------\n")
+		fmt.Println("------------------------------------------------------------------")
+		fmt.Println("List of all available projects:")
+		fmt.Println("------------------------------------------------------------------")
 		for i, sliceProjects := range sliceProjects {
 			fmt.Printf("%d. %s\n", i+1, sliceProjects)
 		}
-		fmt.Println("---------------------------------")
+		fmt.Println("------------------------------------------------------------------")
 	},
 }
 
@@ -90,13 +92,4 @@ func init() {
 
 	rootCmd.AddCommand(listProjectsCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// listProjectsCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// listProjectsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
