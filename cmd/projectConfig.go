@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -8,6 +5,75 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+// Structs for projectConfig JSON
+
+type Config struct {
+	CohortSelector  CohortSelector  `json:"cohortSelector"`
+	DataSelector    DataSelector    `json:"dataSelector"`
+	Deidentificator Deidentificator `json:"deidentificator"`
+	BundleSender    BundleSender    `json:"bundleSender"`
+}
+
+type CohortSelector struct {
+	TrustCenterAgent TrustCenterAgent `json:"trustCenterAgent"`
+}
+
+type TrustCenterAgent struct {
+	Server                  Server   `json:"server"`
+	Domain                  string   `json:"domain"`
+	PatientIdentifierSystem string   `json:"patientIdentifierSystem"`
+	PolicySystem            string   `json:"policySystem"`
+	Policies                []string `json:"policies"`
+}
+
+type Server struct {
+	BaseUrl string `json:"baseUrl"`
+}
+
+type DataSelector struct {
+	Everything Everything `json:"everything"`
+}
+
+type Everything struct {
+	FhirServer Server  `json:"fhirServer"`
+	Resolve    Resolve `json:"resolve"`
+}
+
+type Resolve struct {
+	PatientIdentifierSystem string `json:"patientIdentifierSystem"`
+}
+
+type Deidentificator struct {
+	Deidentifhir Deidentifhir `json:"deidentifhir"`
+}
+
+type Deidentifhir struct {
+	TrustCenterAgent   TrustCenterAgentDeident `json:"trustCenterAgent"`
+	MaxDateShift       string                  `json:"maxDateShift"`
+	DeidentifhirConfig string                  `json:"deidentifhirConfig"`
+	ScraperConfig      string                  `json:"scraperConfig"`
+}
+
+type TrustCenterAgentDeident struct {
+	Server  Server  `json:"server"`
+	Domains Domains `json:"domains"`
+}
+
+type Domains struct {
+	Pseudonym string `json:"pseudonym"`
+	Salt      string `json:"salt"`
+	DateShift string `json:"dateShift"`
+}
+
+type BundleSender struct {
+	ResearchDomainAgent ResearchDomainAgent `json:"researchDomainAgent"`
+}
+
+type ResearchDomainAgent struct {
+	Server  Server `json:"server"`
+	Project string `json:"project"`
+}
 
 // projectConfigCmd represents the projectConfig command
 var projectConfigCmd = &cobra.Command{
