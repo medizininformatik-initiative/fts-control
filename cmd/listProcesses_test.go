@@ -2,9 +2,24 @@ package cmd
 
 import (
 	"encoding/json"
+	"github.com/spf13/cobra"
 	"testing"
 	"time"
 )
+
+// TestListProcessesCommandExists checks if the processStatus command is properly registered in rootCmd.
+func TestListProcessesCommandExists(t *testing.T) {
+	var found *cobra.Command
+	for _, c := range rootCmd.Commands() {
+		if c.Use == "listProcesses" {
+			found = c
+			break
+		}
+	}
+	if found == nil {
+		t.Errorf("The processStatus command should exist in rootCmd")
+	}
+}
 
 // JSON unmarshalling of a Process object
 func TestProcess_JSONUnmarshal(t *testing.T) {

@@ -17,16 +17,10 @@ var processId string
 var processStatusCmd = &cobra.Command{
 	Use:   "processStatus",
 	Short: "Show process status",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  `Shows the process status of the selected process ID`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//fmt.Printf("processStatus called, the processId is: %s \n", processId)
+
 		apiUrl := BuildApiUrl("/api/v2/process/status/" + processId)
-		//fmt.Println(apiUrl)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
