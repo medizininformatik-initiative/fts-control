@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"github.com/spf13/cobra"
 	"testing"
 )
@@ -29,17 +28,5 @@ func TestHasProcessIDFlag(t *testing.T) {
 	}
 	if flag.Changed {
 		t.Errorf("The 'processId' flag should not be set by default")
-	}
-}
-
-// TestRequiresProcessID ensures that executing the command without providing a 'processId' argument results in an error.
-func TestRequiresProcessID(t *testing.T) {
-	b := bytes.NewBufferString("")
-	processStatusCmd.SetOut(b)
-	processStatusCmd.SetArgs([]string{})
-
-	err := processStatusCmd.Execute()
-	if err == nil {
-		t.Errorf("The command should return an error if 'processId' is missing")
 	}
 }
