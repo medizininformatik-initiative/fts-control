@@ -68,13 +68,13 @@ var listProjectsCmd = &cobra.Command{
 		}
 
 		// Output
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnL()
 		fmt.Println("List of all available projects:")
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnL()
 		for i, sliceProjects := range sliceProjects {
 			fmt.Printf("%d. %s\n", i+1, sliceProjects)
 		}
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnS()
 	},
 }
 

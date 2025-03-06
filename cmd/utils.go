@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/spf13/viper"
 	"log"
 	"net/url"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 // Process struct for a single process
@@ -45,4 +45,18 @@ func GetBaseURL() *url.URL {
 // BuildApiUrl combines the base URL with a specific API endpoint
 func BuildApiUrl(endpoint string) string {
 	return GetBaseURL().ResolveReference(&url.URL{Path: endpoint}).String()
+}
+
+// Dividing Lines
+
+// Large
+
+func DivdlnL() {
+	fmt.Println("==================================================================")
+}
+
+// Small
+
+func DivdlnS() {
+	fmt.Println("------------------------------------------------------------------")
 }

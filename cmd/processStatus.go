@@ -56,23 +56,23 @@ var processStatusCmd = &cobra.Command{
 			log.Fatalf("Error unmarshalling response: %v", err)
 		}
 
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnL()
 		fmt.Printf("Representation of the Process with the ProcessID: %s \n", processId)
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnL()
 		fmt.Printf("ProcessID: %s\n", prcss.ProcessID)
 		fmt.Printf("Phase: %s\n", prcss.Phase)
 		fmt.Printf("CreatedAt: %s\n", prcss.CreatedAt.ToTime().Local().Format(time.RFC1123))
 		if prcss.FinishedAt != nil {
 			fmt.Printf("FinishedAt: %s\n", prcss.FinishedAt.ToTime().Local().Format(time.RFC1123))
 		} else {
-			fmt.Println("FinishedAt: null")
+			fmt.Println("FinishedAt: The process is still running")
 		}
 		fmt.Printf("TotalPatients: %d\n", prcss.TotalPatients)
 		fmt.Printf("TotalBundles: %d\n", prcss.TotalBundles)
 		fmt.Printf("DeidentifiedBundles: %d\n", prcss.DeidentifiedBundles)
 		fmt.Printf("SentBundles: %d\n", prcss.SentBundles)
 		fmt.Printf("SkippedBundles: %d\n", prcss.SkippedBundles)
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnS()
 	},
 }
 
