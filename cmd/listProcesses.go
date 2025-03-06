@@ -55,9 +55,9 @@ to quickly create a Cobra application.`,
 			log.Fatalf("Error parsing JSON: %v", err)
 		}
 
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnL()
 		fmt.Println("List of all transfer process statuses:")
-		fmt.Println("------------------------------------------------------------------")
+		DivdlnL()
 		for _, p := range processes {
 			fmt.Printf("ProcessID: %s\n", p.ProcessID)
 			fmt.Printf("Phase: %s\n", p.Phase)
@@ -65,14 +65,14 @@ to quickly create a Cobra application.`,
 			if p.FinishedAt != nil {
 				fmt.Printf("FinishedAt: %s\n", p.FinishedAt.ToTime().Local().Format(time.RFC1123))
 			} else {
-				fmt.Println("FinishedAt: null")
+				fmt.Println("FinishedAt: The process is still running.")
 			}
 			fmt.Printf("TotalPatients: %d\n", p.TotalPatients)
 			fmt.Printf("TotalBundles: %d\n", p.TotalBundles)
 			fmt.Printf("DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
 			fmt.Printf("SentBundles: %d\n", p.SentBundles)
 			fmt.Printf("SkippedBundles: %d\n", p.SkippedBundles)
-			fmt.Println("------------------------------------------------------------------")
+			DivdlnS()
 		}
 	},
 }
