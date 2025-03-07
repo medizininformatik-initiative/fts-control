@@ -20,6 +20,13 @@ var processStatusCmd = &cobra.Command{
 	Long:  `Shows the process status of the selected process ID`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		if !cmd.Flags().Changed("processId") {
+			DivdlnL()
+			fmt.Printf("Warning: No --processId (-i) specified.\n\nPlease set the flag to retrieve the status of a process.\n")
+			DivdlnL()
+			return
+		}
+
 		apiUrl := BuildApiUrl("/api/v2/process/status/" + processId)
 
 		client := &http.Client{}
@@ -78,11 +85,6 @@ var processStatusCmd = &cobra.Command{
 
 func init() {
 	processStatusCmd.Flags().StringVarP(&processId, "processId", "i", "", "Please Enter the processId")
-
-	// Set Flag as Required
-	if err := processStatusCmd.MarkFlagRequired("processId"); err != nil {
-		log.Fatalf("Error marking processId as required: %v", err)
-	}
 
 	rootCmd.AddCommand(processStatusCmd)
 

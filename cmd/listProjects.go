@@ -14,7 +14,7 @@ import (
 var listProjectsCmd = &cobra.Command{
 	Use:   "listProjects", // /api/v2/projects
 	Short: "List available projects",
-	Long:  `List all available projects from the API.`,
+	Long:  `List of all available projects from the API.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 

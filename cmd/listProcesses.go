@@ -14,12 +14,7 @@ import (
 var listProcessesCmd = &cobra.Command{
 	Use:   "listProcesses",
 	Short: "List of all transfer process statuses",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  `List of all available transfer process statuses`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Generate API URL
 		apiUrl := BuildApiUrl("/api/v2/process/statuses")
