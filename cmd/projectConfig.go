@@ -86,7 +86,7 @@ var prjName string
 // projectConfigCmd represents the projectConfig command
 var projectConfigCmd = &cobra.Command{
 	Use:   "projectConfig",
-	Short: "Project Configuration",
+	Short: "Project configuration",
 	Long:  `Shows the project configuration of the selected project.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
