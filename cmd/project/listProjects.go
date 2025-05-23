@@ -1,8 +1,10 @@
-package cmd
+package project
 
 import (
 	"encoding/json"
 	"fmt"
+
+	"ftsctl/cmd/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io"
@@ -11,15 +13,16 @@ import (
 )
 
 // listProjectsCmd represents the listProjects command
-var listProjectsCmd = &cobra.Command{
-	Use:   "listProjects", // /api/v2/projects
+
+var ListProjectsCmd = &cobra.Command{
+	Use:   "list", // /api/v2/projects
 	Short: "List of all available projects",
 	Long:  `List of all available projects from the API.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Generate API URL
-		apiUrl := BuildApiUrl("/api/v2/projects")
+		apiUrl := utils.BuildApiUrl("/api/v2/projects")
 
 		// Create HTTP client
 		client := &http.Client{}
@@ -68,13 +71,13 @@ var listProjectsCmd = &cobra.Command{
 		}
 
 		// Output
-		DivdlnL()
+		utils.DivdlnL()
 		fmt.Println("List of all available projects:")
-		DivdlnL()
+		utils.DivdlnL()
 		for i, sliceProjects := range sliceProjects {
 			fmt.Printf("%d. %s\n", i+1, sliceProjects)
 		}
-		DivdlnS()
+		utils.DivdlnS()
 	},
 }
 
@@ -83,13 +86,13 @@ func init() {
 	// load config.yaml
 	viper.SetConfigName("config") // Filename
 	viper.SetConfigType("yaml")   // Filetype
-	viper.AddConfigPath("..")     // directory where the file is located
+	viper.AddConfigPath("../")    // directory where the file is located
 
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Error reading config file: %v", err)
 	}
 
-	rootCmd.AddCommand(listProjectsCmd)
+	Cmd.AddCommand(ListProjectsCmd)
 
 }

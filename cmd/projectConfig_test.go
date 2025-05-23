@@ -1,26 +1,21 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"ftsctl/cmd/process"
+	"ftsctl/cmd/project"
 	"testing"
 )
 
-func TestProjectConfigCommandExists(t *testing.T) {
-	var found *cobra.Command
-	for _, c := range rootCmd.Commands() {
-		if c.Use == "projectConfig" {
-			found = c
-			break
-		}
-	}
-	if found == nil {
-		t.Errorf("The processStatus command should exist in rootCmd")
+func TestProjectConfingCommandExists(t *testing.T) {
+	cmd, _, err := process.Cmd.Find([]string{"ProjectConfing"})
+	if err != nil || cmd == nil {
+		t.Errorf("The 'ProjectConfing' subcommand should exist under 'process'")
 	}
 }
 
 func TestProjectConfigCmd_MissingProjectName(t *testing.T) {
 	// Temporarily clear the project name
-	prjName = ""
+	project.PrjName = ""
 
 	// Capture log output
 	defer func() {
@@ -30,5 +25,5 @@ func TestProjectConfigCmd_MissingProjectName(t *testing.T) {
 	}()
 
 	// Run the command without a project name
-	projectConfigCmd.Run(nil, nil)
+	project.ConfigCmd.Run(nil, nil)
 }

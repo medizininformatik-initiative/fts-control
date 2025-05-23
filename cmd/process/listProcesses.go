@@ -1,23 +1,23 @@
-package cmd
+package process
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
+	"ftsctl/cmd/utils"
 	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/spf13/cobra"
 )
 
-// listProcessesCmd represents the listProcesses command
 var listProcessesCmd = &cobra.Command{
-	Use:   "listProcesses",
-	Short: "List of all transfer process statuses",
-	Long:  `List of all available transfer process statuses`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// Generate API URL
-		apiUrl := BuildApiUrl("/api/v2/process/statuses")
+	Use:   "list",
+	Short: "List all transfer process statuses",
+	Long:  `Lists all available transfer process statuses.`,
+	Run: func(cmdCobra *cobra.Command, args []string) {
+		apiUrl := utils.BuildApiUrl("/api/v2/process/statuses")
 
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
@@ -29,10 +29,9 @@ var listProcessesCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Error sending the request: %v", err)
 		}
-
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
-				log.Printf("Error closing response body: %v", err)
+				log.Printf("Warning: failed to close response body: %v", err)
 			}
 		}()
 
@@ -45,14 +44,15 @@ var listProcessesCmd = &cobra.Command{
 			log.Fatalf("Error reading the response: %v", err)
 		}
 
-		var processes []Process
+		var processes []utils.Process
 		if err := json.Unmarshal(body, &processes); err != nil {
 			log.Fatalf("Error parsing JSON: %v", err)
 		}
 
-		DivdlnL()
+		utils.DivdlnL()
 		fmt.Println("List of all transfer process statuses:")
-		DivdlnL()
+		utils.DivdlnL()
+
 		for _, p := range processes {
 			fmt.Printf("ProcessID: %s\n", p.ProcessID)
 			fmt.Printf("Phase: %s\n", p.Phase)
@@ -67,12 +67,11 @@ var listProcessesCmd = &cobra.Command{
 			fmt.Printf("DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
 			fmt.Printf("SentBundles: %d\n", p.SentBundles)
 			fmt.Printf("SkippedBundles: %d\n", p.SkippedBundles)
-			DivdlnS()
+			utils.DivdlnS()
 		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listProcessesCmd)
-
+	Cmd.AddCommand(listProcessesCmd)
 }

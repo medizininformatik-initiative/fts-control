@@ -2,42 +2,37 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/spf13/cobra"
+	"ftsctl/cmd/process"
+	"ftsctl/cmd/transfer"
 	"testing"
 )
 
 func TestStartTransferCommandExists(t *testing.T) {
-	var found *cobra.Command
-	for _, c := range rootCmd.Commands() {
-		if c.Use == "startTransfer" {
-			found = c
-			break
-		}
-	}
-	if found == nil {
-		t.Errorf("The processStatus command should exist in rootCmd")
+	cmd, _, err := process.Cmd.Find([]string{"StartTransfer"})
+	if err != nil || cmd == nil {
+		t.Errorf("The 'StartTransfer' subcommand should exist under 'process'")
 	}
 }
 
 func TestRequestPayloadMarshaling_OmitEmpty(t *testing.T) {
 	tests := []struct {
 		name     string
-		payload  requestPayload
+		payload  transfer.RequestPayload
 		expected string
 	}{
 		{
 			name:     "Nil IDs",
-			payload:  requestPayload{IDs: nil},
+			payload:  transfer.RequestPayload{IDs: nil},
 			expected: `{}`,
 		},
 		{
 			name:     "Empty slice IDs",
-			payload:  requestPayload{IDs: []string{}},
+			payload:  transfer.RequestPayload{IDs: []string{}},
 			expected: `{}`,
 		},
 		{
 			name:     "With IDs",
-			payload:  requestPayload{IDs: []string{"id1", "id2"}},
+			payload:  transfer.RequestPayload{IDs: []string{"id1", "id2"}},
 			expected: `{"ids":["id1","id2"]}`,
 		},
 	}

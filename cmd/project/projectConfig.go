@@ -1,8 +1,10 @@
-package cmd
+package project
 
 import (
 	"encoding/json"
 	"fmt"
+
+	"ftsctl/cmd/utils"
 	"io"
 	"log"
 	"net/http"
@@ -81,23 +83,24 @@ type ResearchDomainAgent struct {
 
 // Name of the Project
 
-var prjName string
+var PrjName string
 
-// projectConfigCmd represents the projectConfig command
-var projectConfigCmd = &cobra.Command{
-	Use:   "projectConfig",
+// ConfigCmd represents the projectConfig command
+
+var ConfigCmd = &cobra.Command{
+	Use:   "config",
 	Short: "Project configuration",
 	Long:  `Shows the project configuration of the selected project.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if !cmd.Flags().Changed("projectName") {
-			DivdlnL()
+			utils.DivdlnL()
 			fmt.Printf("Warning: No --projectName (-n) specified.\n\nPlease set the Flag to retrieve the Project Configuration of a Project.\n")
-			DivdlnL()
+			utils.DivdlnL()
 			return
 		}
 
-		apiUrl := BuildApiUrl("/api/v2/projects/" + prjName)
+		apiUrl := utils.BuildApiUrl("/api/v2/projects/" + PrjName)
 		//apiUrl := BuildApiUrl("/api/v2/projects/example")
 
 		client := &http.Client{}
@@ -135,9 +138,9 @@ var projectConfigCmd = &cobra.Command{
 		}
 		/////////////////////////
 		// Formated Output
-		DivdlnL()
-		fmt.Printf("Project configuration with the Project Name: %s \n", prjName)
-		DivdlnL()
+		utils.DivdlnL()
+		fmt.Printf("Project configuration with the Project Name: %s \n", PrjName)
+		utils.DivdlnL()
 		fmt.Printf("CohortSelector - TrustCenterAgent:\n")
 		fmt.Printf("  Server BaseURL: %s\n", pConfig.CohortSelector.TrustCenterAgent.Server.BaseUrl)
 		fmt.Printf("  Domain: %s\n", pConfig.CohortSelector.TrustCenterAgent.Domain)
@@ -148,12 +151,12 @@ var projectConfigCmd = &cobra.Command{
 			fmt.Printf("    - %s\n", policy)
 		}
 
-		DivdlnS()
+		utils.DivdlnS()
 		fmt.Printf("DataSelector - Everything:\n")
 		fmt.Printf("  FHIR Server BaseURL: %s\n", pConfig.DataSelector.Everything.FhirServer.BaseUrl)
 		fmt.Printf("  Resolve Patient Identifier System: %s\n", pConfig.DataSelector.Everything.Resolve.PatientIdentifierSystem)
 
-		DivdlnS()
+		utils.DivdlnS()
 		fmt.Printf("Deidentificator - Deidentifhir:\n")
 		fmt.Printf("  TrustCenterAgent Server BaseURL: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Server.BaseUrl)
 		fmt.Printf("  Max Date Shift: %s\n", pConfig.Deidentificator.Deidentifhir.MaxDateShift)
@@ -164,24 +167,24 @@ var projectConfigCmd = &cobra.Command{
 		fmt.Printf("    Salt: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.Salt)
 		fmt.Printf("    DateShift: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.DateShift)
 
-		DivdlnS()
+		utils.DivdlnS()
 		fmt.Printf("BundleSender - ResearchDomainAgent:\n")
 		fmt.Printf("  Server BaseURL: %s\n", pConfig.BundleSender.ResearchDomainAgent.Server.BaseUrl)
 		fmt.Printf("  Project: %s\n", pConfig.BundleSender.ResearchDomainAgent.Project)
-		DivdlnS()
+		utils.DivdlnS()
 
 	},
 }
 
 func init() {
-	projectConfigCmd.Flags().StringVarP(&prjName, "projectName", "n", "", "Please Enter the Name of the Project")
+	ConfigCmd.Flags().StringVarP(&PrjName, "projectName", "n", "", "Please Enter the Name of the Project")
 
 	// Set Flag as Required
 	//if err := projectConfigCmd.MarkFlagRequired("projectName"); err != nil {
 	//	log.Fatalf("Error marking projectName as required: %v", err)
 	//}
 
-	rootCmd.AddCommand(projectConfigCmd)
+	Cmd.AddCommand(ConfigCmd)
 
 	// Here you will define your flags and configuration settings.
 

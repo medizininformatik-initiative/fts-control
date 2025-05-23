@@ -5,6 +5,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"ftsctl/cmd/process"
+	"ftsctl/cmd/project"
+	"ftsctl/cmd/transfer"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -14,7 +17,14 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "ftsctl",
 	Short: "Control the FTSnext-system from the command line.",
-	Long: `Manage and control the FTSnext-system efficiently 
+	Long: `███████╗████████╗███████╗ ██████╗████████╗██╗     
+██╔════╝╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝██║     
+█████╗     ██║   ███████╗██║        ██║   ██║     
+██╔══╝     ██║   ╚════██║██║        ██║   ██║     
+██║        ██║   ███████║╚██████╗   ██║   ███████╗
+╚═╝        ╚═╝   ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝
+                                                  
+Manage and control the FTSnext-system efficiently 
 and seamlessly directly from the command line interface, 
 enabling advanced configuration and operation 
 through text-based commands.`,
@@ -33,6 +43,9 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(project.Cmd)
+	rootCmd.AddCommand(process.Cmd)
+	rootCmd.AddCommand(transfer.Cmd)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
