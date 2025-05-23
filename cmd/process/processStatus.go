@@ -1,8 +1,9 @@
-package cmd
+package process
 
 import (
 	"encoding/json"
 	"fmt"
+	"ftsctl/cmd/utils"
 	"io"
 	"log"
 	"net/http"
@@ -14,20 +15,21 @@ import (
 var processId string
 
 // processStatusCmd represents the processStatus command
-var processStatusCmd = &cobra.Command{
-	Use:   "processStatus",
+
+var StatusCmd = &cobra.Command{
+	Use:   "status",
 	Short: "Show process status",
 	Long:  `Shows the process status of the selected process ID`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if !cmd.Flags().Changed("processId") {
-			DivdlnL()
+			utils.DivdlnL()
 			fmt.Printf("Warning: No --processId (-i) specified.\n\nPlease set the flag to retrieve the status of a process.\n")
-			DivdlnL()
+			utils.DivdlnL()
 			return
 		}
 
-		apiUrl := BuildApiUrl("/api/v2/process/status/" + processId)
+		apiUrl := utils.BuildApiUrl("/api/v2/process/status/" + processId)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
@@ -57,15 +59,15 @@ var processStatusCmd = &cobra.Command{
 
 		//fmt.Println(string(body))
 
-		prcss := Process{}
+		prcss := utils.Process{}
 		err = json.Unmarshal(body, &prcss)
 		if err != nil {
 			log.Fatalf("Error unmarshalling response: %v", err)
 		}
 
-		DivdlnL()
+		utils.DivdlnL()
 		fmt.Printf("Representation of the Process with the ProcessID: %s \n", processId)
-		DivdlnL()
+		utils.DivdlnL()
 		fmt.Printf("ProcessID: %s\n", prcss.ProcessID)
 		fmt.Printf("Phase: %s\n", prcss.Phase)
 		fmt.Printf("CreatedAt: %s\n", prcss.CreatedAt.ToTime().Local().Format(time.RFC1123))
@@ -79,13 +81,13 @@ var processStatusCmd = &cobra.Command{
 		fmt.Printf("DeidentifiedBundles: %d\n", prcss.DeidentifiedBundles)
 		fmt.Printf("SentBundles: %d\n", prcss.SentBundles)
 		fmt.Printf("SkippedBundles: %d\n", prcss.SkippedBundles)
-		DivdlnS()
+		utils.DivdlnS()
 	},
 }
 
 func init() {
-	processStatusCmd.Flags().StringVarP(&processId, "processId", "i", "", "Please Enter the processId")
+	StatusCmd.Flags().StringVarP(&processId, "processId", "i", "", "Please Enter the processId")
 
-	rootCmd.AddCommand(processStatusCmd)
+	Cmd.AddCommand(StatusCmd)
 
 }

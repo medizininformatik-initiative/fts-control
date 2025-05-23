@@ -2,29 +2,24 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/spf13/cobra"
+	"ftsctl/cmd/process"
+	"ftsctl/cmd/utils"
 	"testing"
 	"time"
 )
 
 // TestListProcessesCommandExists checks if the processStatus command is properly registered in rootCmd.
 func TestListProcessesCommandExists(t *testing.T) {
-	var found *cobra.Command
-	for _, c := range rootCmd.Commands() {
-		if c.Use == "listProcesses" {
-			found = c
-			break
-		}
-	}
-	if found == nil {
-		t.Errorf("The processStatus command should exist in rootCmd")
+	cmd, _, err := process.Cmd.Find([]string{"listProcesses"})
+	if err != nil || cmd == nil {
+		t.Errorf("The 'listProcesses' subcommand should exist under 'process'")
 	}
 }
 
 // JSON unmarshalling of a Process object
 func TestProcess_JSONUnmarshal(t *testing.T) {
 	jsonData := `{"processId":"123","phase":"running","createdAt":[2024,2,28,15,30,45,0],"totalPatients":100,"totalBundles":50,"deidentifiedBundles":25,"sentBundles":10,"skippedBundles":5}`
-	var p Process
+	var p utils.Process
 
 	err := json.Unmarshal([]byte(jsonData), &p)
 	if err != nil {
@@ -39,7 +34,7 @@ func TestProcess_JSONUnmarshal(t *testing.T) {
 // Verify the ToTime method
 
 func TestTimeArray_ToTime(t *testing.T) {
-	timeArray := TimeArray{2024, 2, 28, 15, 30, 45, 0}
+	timeArray := utils.TimeArray{2024, 2, 28, 15, 30, 45, 0}
 	expectedTime := time.Date(2024, 2, 28, 15, 30, 45, 0, time.UTC)
 
 	result := timeArray.ToTime()
@@ -51,7 +46,7 @@ func TestTimeArray_ToTime(t *testing.T) {
 // Check if FinishedAt can be nil
 func TestProcess_FinishedAtNil(t *testing.T) {
 	jsonData := `{"processId":"123","phase":"running","createdAt":[2024,2,28,15,30,45,0],"totalPatients":100,"totalBundles":50,"deidentifiedBundles":25,"sentBundles":10,"skippedBundles":5}`
-	var p Process
+	var p utils.Process
 
 	err := json.Unmarshal([]byte(jsonData), &p)
 	if err != nil {

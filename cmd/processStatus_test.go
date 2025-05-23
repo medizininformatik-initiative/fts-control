@@ -1,27 +1,21 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"ftsctl/cmd/process"
 	"testing"
 )
 
 // TestProcessStatusCommandExists checks if the processStatus command is properly registered in rootCmd.
 func TestProcessStatusCommandExists(t *testing.T) {
-	var found *cobra.Command
-	for _, c := range rootCmd.Commands() {
-		if c.Use == "processStatus" {
-			found = c
-			break
-		}
-	}
-	if found == nil {
-		t.Errorf("The processStatus command should exist in rootCmd")
+	cmd, _, err := process.Cmd.Find([]string{"processStatus"})
+	if err != nil || cmd == nil {
+		t.Errorf("The 'processStatus' subcommand should exist under 'process'")
 	}
 }
 
 // TestHasProcessIDFlag verifies that the processStatus command includes the required 'processId' flag.
 func TestHasProcessIDFlag(t *testing.T) {
-	flag := processStatusCmd.Flags().Lookup("processId")
+	flag := process.StatusCmd.Flags().Lookup("processId")
 	if flag == nil {
 		t.Errorf("The processStatus command should have a 'processId' flag")
 		return
