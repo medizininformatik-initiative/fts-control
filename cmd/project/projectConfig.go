@@ -3,17 +3,15 @@ package project
 import (
 	"encoding/json"
 	"fmt"
-
-	"ftsctl/cmd/utils"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 
+	"ftsctl/cmd/utils"
 	"github.com/spf13/cobra"
 )
 
 // Structs for projectConfig JSON
-
 type Config struct {
 	CohortSelector  CohortSelector  `json:"cohortSelector"`
 	DataSelector    DataSelector    `json:"dataSelector"`
@@ -81,11 +79,7 @@ type ResearchDomainAgent struct {
 	Project string `json:"project"`
 }
 
-// Name of the Project
-
 var PrjName string
-
-// ConfigCmd represents the projectConfig command
 
 var ConfigCmd = &cobra.Command{
 	Use:   "config",
@@ -101,46 +95,49 @@ var ConfigCmd = &cobra.Command{
 		}
 
 		apiUrl := utils.BuildApiUrl("/api/v2/projects/" + PrjName)
-		//apiUrl := BuildApiUrl("/api/v2/projects/example")
-
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
+
 		if err != nil {
-			log.Fatalf("Error creating the request: %v", err)
+			slog.Error("Error creating the request", "error", err)
+			return
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Fatalf("Error sending the request: %v", err)
+			slog.Error("Error sending the request", "error", err)
+			return
 		}
 
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
-				log.Printf("Error closing response body: %v", err)
+				slog.Warn("Error closing response body", "error", err)
 			}
 		}()
 
 		if resp.StatusCode != http.StatusOK {
-			log.Fatalf("Unexpected status code: %d", resp.StatusCode)
+			slog.Error("Unexpected status code", "status", resp.StatusCode)
+			return
 		}
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatalf("Error reading the response: %v", err)
+			slog.Error("Error reading the response", "error", err)
+			return
 		}
-
-		//fmt.Println(string(body))
 
 		pConfig := Config{}
 		err = json.Unmarshal(body, &pConfig)
 		if err != nil {
-			log.Fatalf("Error decoding JSON: %v", err)
+			slog.Error("Error decoding JSON", "error", err)
+			return
 		}
-		/////////////////////////
-		// Formated Output
+
+		// Formatted Output
 		utils.DivdlnL()
 		fmt.Printf("Project configuration with the Project Name: %s \n", PrjName)
 		utils.DivdlnL()
+
 		fmt.Printf("CohortSelector - TrustCenterAgent:\n")
 		fmt.Printf("  Server BaseURL: %s\n", pConfig.CohortSelector.TrustCenterAgent.Server.BaseUrl)
 		fmt.Printf("  Domain: %s\n", pConfig.CohortSelector.TrustCenterAgent.Domain)
@@ -172,27 +169,10 @@ var ConfigCmd = &cobra.Command{
 		fmt.Printf("  Server BaseURL: %s\n", pConfig.BundleSender.ResearchDomainAgent.Server.BaseUrl)
 		fmt.Printf("  Project: %s\n", pConfig.BundleSender.ResearchDomainAgent.Project)
 		utils.DivdlnS()
-
 	},
 }
 
 func init() {
 	ConfigCmd.Flags().StringVarP(&PrjName, "projectName", "n", "", "Please Enter the Name of the Project")
-
-	// Set Flag as Required
-	//if err := projectConfigCmd.MarkFlagRequired("projectName"); err != nil {
-	//	log.Fatalf("Error marking projectName as required: %v", err)
-	//}
-
 	Cmd.AddCommand(ConfigCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// projectConfigCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// projectConfigCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

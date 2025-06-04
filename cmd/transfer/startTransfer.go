@@ -6,88 +6,90 @@ import (
 	"fmt"
 	"ftsctl/cmd/utils"
 	"github.com/spf13/cobra"
-	"log"
+	"io"
+	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 )
 
-// requestPayload defines the structure for the optional ID list
-
+// RequestPayload defines the structure for the optional ID list
 type RequestPayload struct {
 	IDs []string `json:"ids,omitempty"`
 }
 
-// startTransferCmd represents the startTransfer command
 var startTransferCmd = &cobra.Command{
-	Use:   "start", // /api/v2/process/{project}/start
+	Use:   "start",
 	Short: "Start a transfer process",
-	Long: `Start a transfer of patients with IDs given in the request
-body or if empty start a transfer of all consented 
-patients of the selected project.`,
+	Long: `Start a transfer of patients with IDs provided in the request
+body, or if none are provided, start a transfer of all consented 
+patients for the specified project.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Retrieve project name
 		projectName, _ := cmd.Flags().GetString("projectName")
-
-		// Check if project name is provided
 		if projectName == "" {
 			fmt.Println("ERROR: The --projectName (-n) flag is required!")
 			fmt.Println("Usage: ftsctl startTransfer --projectName exampleProject [--ids id1,id2,id3]")
 			return
 		}
 
-		// Retrieve IDs (if provided)
 		idsStr, _ := cmd.Flags().GetString("ids")
 		var ids []string
 		if idsStr != "" {
 			ids = strings.Split(idsStr, ",")
 		}
 
-		// Build API URL
 		apiUrl := utils.BuildApiUrl(fmt.Sprintf("/api/v2/process/%s/start", projectName))
 
-		// Generate payload
-		payload := RequestPayload{IDs: ids}
-		jsonData, err := json.Marshal(payload)
-		if err != nil {
-			log.Fatalf("Error creating JSON payload: %v", err)
+		var resp *http.Response
+		var err error
+
+		if len(ids) > 0 {
+			jsonData, err := json.Marshal(ids)
+			if err != nil {
+				slog.Error("Error creating JSON payload", "error", err)
+				os.Exit(1)
+			}
+			slog.Debug("JSON payload created", "payload", string(jsonData))
+
+			resp, err = http.Post(apiUrl, "application/json", bytes.NewBuffer(jsonData))
+		} else {
+			resp, err = http.Post(apiUrl, "application/json", nil)
 		}
 
-		// Send HTTP request
-		resp, err := http.Post(apiUrl, "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			log.Fatalf("Error sending request: %v", err)
+			slog.Error("Error sending request", "error", err)
+			os.Exit(1)
 		}
 		defer func() {
-			if err := resp.Body.Close(); err != nil {
-				log.Printf("Error closing response body: %v", err)
+			if cerr := resp.Body.Close(); cerr != nil {
+				slog.Warn("Error closing response body", "error", cerr)
 			}
 		}()
 
-		// Check if response status is 200 OK
-		if resp.StatusCode == http.StatusOK {
+		utils.DivdlnL()
 
+		if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusAccepted {
 			if len(ids) > 0 {
-				utils.DivdlnL()
-				fmt.Printf("Transfer of the project %s \nwith the given patient IDs has started.\n", projectName)
-				utils.DivdlnL()
-				fmt.Println("Patient-IDs:")
+				fmt.Printf("Transfer of project '%s' has started with the following patient IDs:\n", projectName)
 				for _, id := range ids {
 					fmt.Printf("   - %s\n", id)
 				}
 			} else {
-				utils.DivdlnL()
-				fmt.Printf("Transfer of the project %s has started.\n", projectName)
-				utils.DivdlnL()
-				fmt.Printf("No patient IDs provided. \nThe transfer starts with all patient IDs from %s.\n", projectName)
+				fmt.Printf("Transfer of project '%s' has started for all consented patients.\n", projectName)
 			}
-
 			utils.DivdlnS()
-			fmt.Printf("\nApiUrl: %s\n", apiUrl)
-			fmt.Printf("\nResponse Status: %s\n", resp.Status)
+			fmt.Printf("API URL: %s\n", apiUrl)
+			fmt.Printf("Response Status: %s\n", resp.Status)
 			utils.DivdlnS()
 		} else {
-			utils.DivdlnL()
 			fmt.Printf("Request failed! Response Status: %s\n", resp.Status)
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				slog.Error("Error reading response body", "error", err)
+			} else {
+				fmt.Printf("Server response body:\n%s\n", string(bodyBytes))
+			}
 			utils.DivdlnL()
 		}
 	},

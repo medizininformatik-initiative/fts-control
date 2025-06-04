@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"ftsctl/cmd/process"
 	"ftsctl/cmd/project"
 	"testing"
 )
 
 func TestProjectConfingCommandExists(t *testing.T) {
-	cmd, _, err := process.Cmd.Find([]string{"ProjectConfing"})
+	cmd, _, err := project.Cmd.Find([]string{"ProjectConfing"})
 	if err != nil || cmd == nil {
 		t.Errorf("The 'ProjectConfing' subcommand should exist under 'process'")
 	}

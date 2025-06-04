@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"encoding/json"
-	"ftsctl/cmd/process"
 	"ftsctl/cmd/transfer"
 	"testing"
 )
 
 func TestStartTransferCommandExists(t *testing.T) {
-	cmd, _, err := process.Cmd.Find([]string{"StartTransfer"})
+	cmd, _, err := transfer.Cmd.Find([]string{"StartTransfer"})
 	if err != nil || cmd == nil {
 		t.Errorf("The 'StartTransfer' subcommand should exist under 'process'")
 	}

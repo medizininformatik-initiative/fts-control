@@ -3,13 +3,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"ftsctl/cmd/process"
+	"ftsctl/cmd/project"
 	"testing"
 )
 
 // TestListProjectsCommandExists checks if the processStatus command is properly registered in rootCmd.
 func TestListProjectsCommandExists(t *testing.T) {
-	cmd, _, err := process.Cmd.Find([]string{"listProcjects"})
+	cmd, _, err := project.Cmd.Find([]string{"listProjects"})
 	if err != nil || cmd == nil {
 		t.Errorf("The 'listProcjects' subcommand should exist under 'process'")
 	}

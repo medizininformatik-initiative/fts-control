@@ -1,4 +1,4 @@
 # Please enter your base_url
 # base_url: "base_url"
 api:
-  base_url: "http://localhost:8080"
+  base_url: "http://localhost:32800"
