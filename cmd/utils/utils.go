@@ -43,6 +43,7 @@ func GetBaseURL() *url.URL {
 }
 
 // BuildApiUrl combines the base URL with a specific API endpoint
+
 func BuildApiUrl(endpoint string) string {
 	return GetBaseURL().ResolveReference(&url.URL{Path: endpoint}).String()
 }
@@ -59,4 +60,37 @@ func DivdlnL() {
 
 func DivdlnS() {
 	fmt.Println("------------------------------------------------------------------")
+}
+
+// Logo
+
+func GenerateLogo() string {
+	const Reset = "\033[0m"
+	const Cyan = "\033[96m"
+	logo := `
+███████╗████████╗███████╗												
+██╔════╝╚══██╔══╝██╔════╝` + Cyan + `           ██╗   ██╗` + Reset + `
+█████╗     ██║   ███████╗` + Cyan + ` ██████╗████████╗██║` + Reset + `
+██╔══╝     ██║   ╚════██║` + Cyan + `██╔════╝╚══██╔══╝██║` + Reset + `
+██║        ██║   ███████║` + Cyan + `╚██████╗   ██║   █████╗` + Reset + `
+╚═╝        ╚═╝   ╚══════╝` + Cyan + ` ╚═════╝   ╚═╝   ╚════╝` + Reset + `
+       
+`
+
+	return logo
+}
+
+func GenerateLogoV2() string {
+	const Reset = "\033[0m"
+	const Cyan = "\033[96m"
+	logo := `
+███████` + Cyan + `╗` + Reset + `████████` + Cyan + `╗` + Reset + `███████` + Cyan + `╗` + Reset + `
+██` + Cyan + `╔════╝╚══` + Reset + `██` + Cyan + `╔══╝` + Reset + `██` + Cyan + `╔════╝` + Reset + `` + Cyan + `           ██` + Reset + `╗` + Cyan + `   ██` + Reset + `╗
+█████` + Cyan + `╗` + Reset + `     ██` + Cyan + `║` + Reset + `   ███████` + Cyan + `╗` + Reset + `` + Cyan + ` ██████` + Reset + `╗` + Cyan + `████████` + Reset + `╗` + Cyan + `██` + Reset + `║
+██` + Cyan + `╔══╝` + Reset + `     ██` + Cyan + `║   ╚════` + Reset + `██` + Reset + `` + Cyan + `║` + Cyan + `██` + Reset + `╔════╝╚══` + Cyan + `██` + Reset + `╔══╝` + Cyan + `██` + Reset + `║
+██` + Cyan + `║` + Reset + `        ██` + Cyan + `║` + Reset + `   ███████` + Reset + `` + Cyan + `║` + Cyan + `` + Reset + `╚` + Cyan + `██████` + Reset + `╗` + Cyan + `   ██` + Reset + `║` + Cyan + `   █████` + Reset + `╗
+` + Cyan + `╚═╝        ╚═╝   ╚══════╝` + Cyan + `` + Reset + ` ╚═════╝   ╚═╝   ╚════╝
+`
+
+	return logo
 }

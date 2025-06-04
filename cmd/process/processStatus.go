@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"ftsctl/cmd/utils"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 )
 
 var processId string
-
-// processStatusCmd represents the processStatus command
 
 var StatusCmd = &cobra.Command{
 	Use:   "status",
@@ -30,39 +29,43 @@ var StatusCmd = &cobra.Command{
 		}
 
 		apiUrl := utils.BuildApiUrl("/api/v2/process/status/" + processId)
-
+		fmt.Printf("API URL: %s\n", apiUrl)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
+
 		if err != nil {
-			log.Fatalf("Error creating the request: %v", err)
+			slog.Error("Error creating the request", "error", err)
+			os.Exit(1)
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Fatalf("Error sending the request: %v", err)
+			slog.Error("Error sending the request", "error", err)
+			os.Exit(1)
 		}
 
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
-				log.Printf("Error closing response body: %v", err)
+				slog.Warn("Error closing response body", "error", err)
 			}
 		}()
 
 		if resp.StatusCode != http.StatusOK {
-			log.Fatalf("Unexpected status code: %d", resp.StatusCode)
+			slog.Error("Unexpected status code", "status", resp.StatusCode)
+			os.Exit(1)
 		}
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatalf("Error reading the response: %v", err)
+			slog.Error("Error reading the response", "error", err)
+			os.Exit(1)
 		}
-
-		//fmt.Println(string(body))
 
 		prcss := utils.Process{}
 		err = json.Unmarshal(body, &prcss)
 		if err != nil {
-			log.Fatalf("Error unmarshalling response: %v", err)
+			slog.Error("Error unmarshalling response", "error", err)
+			os.Exit(1)
 		}
 
 		utils.DivdlnL()
@@ -87,7 +90,5 @@ var StatusCmd = &cobra.Command{
 
 func init() {
 	StatusCmd.Flags().StringVarP(&processId, "processId", "i", "", "Please Enter the processId")
-
 	Cmd.AddCommand(StatusCmd)
-
 }

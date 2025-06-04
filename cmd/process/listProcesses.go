@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"ftsctl/cmd/utils"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -22,31 +23,36 @@ var listProcessesCmd = &cobra.Command{
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
 		if err != nil {
-			log.Fatalf("Error creating the request: %v", err)
+			slog.Error("Error creating the request", "error", err)
+			os.Exit(1)
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Fatalf("Error sending the request: %v", err)
+			slog.Error("Error sending the request", "error", err)
+			os.Exit(1)
 		}
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
-				log.Printf("Warning: failed to close response body: %v", err)
+				slog.Warn("Warning: failed to close response body", "error", err)
 			}
 		}()
 
 		if resp.StatusCode != http.StatusOK {
-			log.Fatalf("Unexpected status code: %d", resp.StatusCode)
+			slog.Error("Unexpected status code", "status", resp.StatusCode)
+			os.Exit(1)
 		}
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatalf("Error reading the response: %v", err)
+			slog.Error("Error reading the response", "error", err)
+			os.Exit(1)
 		}
 
 		var processes []utils.Process
 		if err := json.Unmarshal(body, &processes); err != nil {
-			log.Fatalf("Error parsing JSON: %v", err)
+			slog.Error("Error parsing JSON", "error", err)
+			os.Exit(1)
 		}
 
 		utils.DivdlnL()

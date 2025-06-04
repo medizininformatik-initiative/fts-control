@@ -3,16 +3,13 @@ package project
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
 
 	"ftsctl/cmd/utils"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"io"
-	"log"
-	"net/http"
 )
-
-// listProjectsCmd represents the listProjects command
 
 var ListProjectsCmd = &cobra.Command{
 	Use:   "list", // /api/v2/projects
@@ -30,52 +27,48 @@ var ListProjectsCmd = &cobra.Command{
 		// Create a new HTTP GET request
 		req, err := http.NewRequest("GET", apiUrl, nil)
 		if err != nil {
-			log.Fatalf("Error creating the request: %v", err)
+			slog.Error("Error creating the request", "error", err)
+			return
 		}
+		slog.Debug("Sending request", "url", req.URL.String())
 
 		// Send the request
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Fatalf("Error sending the request: %v", err)
+			slog.Error("Error sending the request", "error", err)
+			return
 		}
 
 		defer func() {
 			if err := resp.Body.Close(); err != nil {
-				log.Printf("Error closing response body: %v", err)
+				slog.Warn("Error closing response body", "error", err)
 			}
 		}()
 
 		// Check the status code (StatusOk = 200)
 		if resp.StatusCode != http.StatusOK {
-			log.Fatalf("Unexpected stats code: %d", resp.StatusCode)
-		}
-
-		// Read the response body
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatalf("Error reading the response: %v", err)
-		}
-
-		//
-		// json formating
-		//
-
-		// Slice for projects
-		var sliceProjects []string
-
-		// JSON unmarshal
-		err = json.Unmarshal(body, &sliceProjects)
-		if err != nil {
-			fmt.Println("Unmarshal error:", err)
+			slog.Error("Unexpected status code", "status", resp.StatusCode)
 			return
 		}
 
-		// Output
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			slog.Error("Error reading the response", "error", err)
+			return
+		}
+
+		var sliceProjects []string
+		err = json.Unmarshal(body, &sliceProjects)
+		if err != nil {
+			slog.Error("Unmarshal error", "error", err)
+			return
+		}
+
 		utils.DivdlnL()
 		fmt.Println("List of all available projects:")
 		utils.DivdlnL()
-		for i, sliceProjects := range sliceProjects {
-			fmt.Printf("%d. %s\n", i+1, sliceProjects)
+		for i, sliceProject := range sliceProjects {
+			fmt.Printf("%d. %s\n", i+1, sliceProject)
 		}
 		utils.DivdlnS()
 	},
@@ -83,16 +76,5 @@ var ListProjectsCmd = &cobra.Command{
 
 func init() {
 
-	// load config.yaml
-	viper.SetConfigName("config") // Filename
-	viper.SetConfigType("yaml")   // Filetype
-	viper.AddConfigPath("../")    // directory where the file is located
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Error reading config file: %v", err)
-	}
-
 	Cmd.AddCommand(ListProjectsCmd)
-
 }
