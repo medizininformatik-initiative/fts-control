@@ -1,15 +1,16 @@
 package cmd
 
 import (
+	"ftsctl/cmd/config"
 	"ftsctl/cmd/process"
 	"ftsctl/cmd/project"
 	"ftsctl/cmd/transfer"
 	"ftsctl/cmd/utils"
-	"github.com/spf13/viper"
 	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -51,11 +52,17 @@ through text-based commands.`,
 func Execute() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./")
 
-	err := viper.ReadInConfig()
+	// Use OS-specific config directory
+	configDir, err := utils.GetConfigDir()
 	if err != nil {
-		slog.Warn("Could not read config file, continuing without it", "error", err)
+		slog.Warn("Could not determine config directory", "error", err)
+	} else {
+		viper.AddConfigPath(configDir)
+	}
+
+	if err := viper.ReadInConfig(); err != nil {
+		slog.Debug("Could not read config file, continuing without it", "error", err)
 	}
 
 	if err := rootCmd.Execute(); err != nil {
@@ -64,7 +71,7 @@ func Execute() {
 }
 
 func init() {
-
+	rootCmd.AddCommand(config.Cmd)
 	rootCmd.AddCommand(project.Cmd)
 	rootCmd.AddCommand(process.Cmd)
 	rootCmd.AddCommand(transfer.Cmd)
