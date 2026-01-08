@@ -1,0 +1,9 @@
+# Binary
+ftsctl
+*.exe
+*.exe~
+*.test
+
+# Coverage (go test -coverprofile)
+*.out
+coverage.html
