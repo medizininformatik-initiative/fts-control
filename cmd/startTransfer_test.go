@@ -13,32 +13,32 @@ func TestStartTransferCommandExists(t *testing.T) {
 	}
 }
 
-func TestRequestPayloadMarshaling_OmitEmpty(t *testing.T) {
+func TestIDsPayloadMarshaling(t *testing.T) {
 	tests := []struct {
 		name     string
-		payload  transfer.RequestPayload
+		ids      []string
 		expected string
 	}{
 		{
 			name:     "Nil IDs",
-			payload:  transfer.RequestPayload{IDs: nil},
-			expected: `{}`,
+			ids:      nil,
+			expected: `null`,
 		},
 		{
 			name:     "Empty slice IDs",
-			payload:  transfer.RequestPayload{IDs: []string{}},
-			expected: `{}`,
+			ids:      []string{},
+			expected: `[]`,
 		},
 		{
 			name:     "With IDs",
-			payload:  transfer.RequestPayload{IDs: []string{"id1", "id2"}},
-			expected: `{"ids":["id1","id2"]}`,
+			ids:      []string{"id1", "id2"},
+			expected: `["id1","id2"]`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := json.Marshal(tt.payload)
+			result, err := json.Marshal(tt.ids)
 			if err != nil {
 				t.Fatalf("unexpected error while marshaling: %v", err)
 			}
