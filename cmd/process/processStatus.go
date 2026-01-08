@@ -29,7 +29,7 @@ var StatusCmd = &cobra.Command{
 		}
 
 		apiUrl := utils.BuildApiUrl("/api/v2/process/status/" + processId)
-		fmt.Printf("API URL: %s\n", apiUrl)
+		slog.Debug("Making API request", "url", apiUrl)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", apiUrl, nil)
 

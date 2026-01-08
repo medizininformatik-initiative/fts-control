@@ -77,10 +77,7 @@ patients for the specified project.`,
 			} else {
 				fmt.Printf("Transfer of project '%s' has started for all consented patients.\n", projectName)
 			}
-			utils.DivdlnS()
-			fmt.Printf("API URL: %s\n", apiUrl)
-			fmt.Printf("Response Status: %s\n", resp.Status)
-			utils.DivdlnS()
+			slog.Debug("Transfer request completed", "url", apiUrl, "status", resp.Status)
 		} else {
 			fmt.Printf("Request failed! Response Status: %s\n", resp.Status)
 
