@@ -30,7 +30,7 @@ func ExecuteProcessStatus(client *utils.Client, w io.Writer, procId string) erro
 	}
 
 	utils.FprintDivdlnL(w)
-	fmt.Fprintf(w, "Representation of the Process with the ProcessID: %s \n", procId)
+	_, _ = fmt.Fprintf(w, "Representation of the Process with the ProcessID: %s \n", procId)
 	utils.FprintDivdlnL(w)
 	utils.FprintProcessStatus(w, prcss)
 	utils.FprintDivdlnS(w)

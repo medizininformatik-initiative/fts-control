@@ -29,10 +29,10 @@ func ExecuteListProjects(client *utils.Client, w io.Writer) error {
 	}
 
 	utils.FprintDivdlnL(w)
-	fmt.Fprintln(w, "List of all available projects:")
+	_, _ = fmt.Fprintln(w, "List of all available projects:")
 	utils.FprintDivdlnL(w)
 	for i, project := range projects {
-		fmt.Fprintf(w, "%d. %s\n", i+1, project)
+		_, _ = fmt.Fprintf(w, "%d. %s\n", i+1, project)
 	}
 	utils.FprintDivdlnS(w)
 	return nil

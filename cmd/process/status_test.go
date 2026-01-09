@@ -109,7 +109,7 @@ func TestExecuteProcessStatus_HTTPErrors(t *testing.T) {
 
 			err := ExecuteProcessStatus(h.Client, h.Stdout, "non-existent")
 			h.AssertError(err, tt.errorContains)
-			h.AssertHTTPError(err, tt.expectedStatus)
+			_ = h.AssertHTTPError(err, tt.expectedStatus)
 		})
 	}
 }

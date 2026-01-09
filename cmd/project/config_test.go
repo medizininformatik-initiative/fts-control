@@ -91,7 +91,7 @@ func TestExecuteProjectConfig_HTTPErrors(t *testing.T) {
 
 			err := ExecuteProjectConfig(h.Client, h.Stdout, "NonExistent")
 			h.AssertError(err, tt.errorContains)
-			h.AssertHTTPError(err, tt.expectedStatus)
+			_ = h.AssertHTTPError(err, tt.expectedStatus)
 		})
 	}
 }

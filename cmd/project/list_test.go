@@ -105,7 +105,7 @@ func TestExecuteListProjects_HTTPErrors(t *testing.T) {
 
 			err := ExecuteListProjects(h.Client, h.Stdout)
 			h.AssertError(err, tt.errorContains)
-			h.AssertHTTPError(err, tt.expectedStatus)
+			_ = h.AssertHTTPError(err, tt.expectedStatus)
 		})
 	}
 }

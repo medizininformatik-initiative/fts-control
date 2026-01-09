@@ -48,12 +48,12 @@ func ExecuteStartTransfer(client *utils.Client, w io.Writer, projectName string,
 
 	utils.FprintDivdlnL(w)
 	if len(ids) > 0 {
-		fmt.Fprintf(w, "Transfer of project '%s' has started with the following patient IDs:\n", projectName)
+		_, _ = fmt.Fprintf(w, "Transfer of project '%s' has started with the following patient IDs:\n", projectName)
 		for _, id := range ids {
-			fmt.Fprintf(w, "   - %s\n", id)
+			_, _ = fmt.Fprintf(w, "   - %s\n", id)
 		}
 	} else {
-		fmt.Fprintf(w, "Transfer of project '%s' has started for all consented patients.\n", projectName)
+		_, _ = fmt.Fprintf(w, "Transfer of project '%s' has started for all consented patients.\n", projectName)
 	}
 	slog.Debug("Transfer request completed", "project", projectName)
 	utils.FprintDivdlnS(w)
