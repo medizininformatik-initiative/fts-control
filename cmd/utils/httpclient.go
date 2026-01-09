@@ -75,7 +75,7 @@ func (c *Client) SetBaseBackoff(d time.Duration) {
 
 // GetJSON performs a GET request and unmarshals the JSON response into target.
 func (c *Client) GetJSON(endpoint string, target interface{}) error {
-	url, err := BuildApiUrl(endpoint)
+	url, err := BuildAPIURL(endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to build API URL: %w", err)
 	}
@@ -92,7 +92,7 @@ func (c *Client) GetJSON(endpoint string, target interface{}) error {
 // If body is nil, sends an empty POST request.
 // If target is nil, response body is not unmarshaled.
 func (c *Client) PostJSON(endpoint string, body interface{}, target interface{}) error {
-	url, err := BuildApiUrl(endpoint)
+	url, err := BuildAPIURL(endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to build API URL: %w", err)
 	}

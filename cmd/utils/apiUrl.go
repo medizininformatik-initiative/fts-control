@@ -22,8 +22,8 @@ func GetBaseURL() (*url.URL, error) {
 	return baseUrl, nil
 }
 
-// BuildApiUrl combines the base URL with a specific API endpoint.
-func BuildApiUrl(endpoint string) (string, error) {
+// BuildAPIURL combines the base URL with a specific API endpoint.
+func BuildAPIURL(endpoint string) (string, error) {
 	baseUrl, err := GetBaseURL()
 	if err != nil {
 		return "", err
