@@ -23,6 +23,7 @@ type Client struct {
 	httpClient  HTTPClient
 	maxRetries  int
 	baseBackoff time.Duration
+	headers     http.Header
 }
 
 // testClient is used for testing to inject a mock client.
@@ -43,6 +44,7 @@ func NewClient() *Client {
 		},
 		maxRetries:  3,
 		baseBackoff: 1 * time.Second,
+		headers:     make(http.Header),
 	}
 }
 
@@ -65,13 +67,101 @@ func NewClientWithHTTPClient(httpClient HTTPClient) *Client {
 		httpClient:  httpClient,
 		maxRetries:  3,
 		baseBackoff: 1 * time.Second,
+		headers:     make(http.Header),
 	}
 }
 
 // SetBaseBackoff sets the base backoff duration for retries.
 // This is primarily useful in tests to speed up retry scenarios.
+//
+// Deprecated: Use WithBaseBackoff instead for immutable configuration.
+// This method mutates the client and is not safe for concurrent use.
 func (c *Client) SetBaseBackoff(d time.Duration) {
 	c.baseBackoff = d
+}
+
+// copyHeaders creates a deep copy of http.Header.
+// This ensures immutability when creating new Client instances.
+func copyHeaders(src http.Header) http.Header {
+	if src == nil {
+		return make(http.Header)
+	}
+	dst := make(http.Header, len(src))
+	for k, v := range src {
+		dst[k] = append([]string(nil), v...)
+	}
+	return dst
+}
+
+// clone creates a shallow copy of the Client with independent headers.
+// The underlying httpClient is shared (which is safe since http.Client is thread-safe).
+func (c *Client) clone() *Client {
+	return &Client{
+		httpClient:  c.httpClient,
+		maxRetries:  c.maxRetries,
+		baseBackoff: c.baseBackoff,
+		headers:     copyHeaders(c.headers),
+	}
+}
+
+// WithHeader returns a new Client with the specified header added.
+// If the header already exists, it replaces the value.
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithHeader(key, value string) *Client {
+	newClient := c.clone()
+	newClient.headers.Set(key, value)
+	return newClient
+}
+
+// WithHeaders returns a new Client with multiple headers added.
+// Existing headers with the same keys will be replaced.
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithHeaders(headers map[string]string) *Client {
+	newClient := c.clone()
+	for k, v := range headers {
+		newClient.headers.Set(k, v)
+	}
+	return newClient
+}
+
+// WithBearerToken returns a new Client with Bearer token authentication.
+// Sets the Authorization header to "Bearer {token}".
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithBearerToken(token string) *Client {
+	return c.WithHeader("Authorization", "Bearer "+token)
+}
+
+// WithAPIKey returns a new Client with API key authentication.
+// Sets the X-API-Key header to the provided key.
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithAPIKey(key string) *Client {
+	return c.WithHeader("X-API-Key", key)
+}
+
+// WithBaseBackoff returns a new Client with the specified base backoff duration.
+// This is primarily useful in tests to speed up retry scenarios.
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithBaseBackoff(d time.Duration) *Client {
+	newClient := c.clone()
+	newClient.baseBackoff = d
+	return newClient
+}
+
+// applyHeaders copies client-level headers to the request.
+// Does not overwrite headers already set on the request.
+// This preserves request-specific headers like Content-Type.
+func (c *Client) applyHeaders(req *http.Request) {
+	if c.headers == nil || req == nil {
+		return
+	}
+
+	for key, values := range c.headers {
+		if req.Header.Get(key) == "" {
+			for _, value := range values {
+				req.Header.Add(key, value)
+			}
+		}
+	}
 }
 
 // GetJSON performs a GET request and unmarshals the JSON response into target.
@@ -86,6 +176,8 @@ func (c *Client) GetJSON(ctx context.Context, endpoint string, target interface{
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
+
+	c.applyHeaders(req)
 
 	return c.doWithRetry(ctx, req, target)
 }
@@ -124,6 +216,8 @@ func (c *Client) PostJSON(ctx context.Context, endpoint string, body interface{}
 			return io.NopCloser(bytes.NewReader(jsonData)), nil
 		}
 	}
+
+	c.applyHeaders(req)
 
 	return c.doWithRetry(ctx, req, target)
 }
