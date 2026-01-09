@@ -29,7 +29,7 @@ func ExecuteListProcesses(client *utils.Client, w io.Writer) error {
 	}
 
 	utils.FprintDivdlnL(w)
-	fmt.Fprintln(w, "List of all transfer process statuses:")
+	_, _ = fmt.Fprintln(w, "List of all transfer process statuses:")
 	utils.FprintDivdlnL(w)
 
 	for _, p := range processes {

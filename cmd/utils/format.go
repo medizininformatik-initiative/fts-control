@@ -17,7 +17,7 @@ func DivdlnL() {
 
 // FprintDivdlnL writes a large dividing line to the given writer.
 func FprintDivdlnL(w io.Writer) {
-	fmt.Fprintln(w, "==================================================================")
+	_, _ = fmt.Fprintln(w, "==================================================================")
 }
 
 // Small
@@ -28,7 +28,7 @@ func DivdlnS() {
 
 // FprintDivdlnS writes a small dividing line to the given writer.
 func FprintDivdlnS(w io.Writer) {
-	fmt.Fprintln(w, "------------------------------------------------------------------")
+	_, _ = fmt.Fprintln(w, "------------------------------------------------------------------")
 }
 
 // Logo
@@ -71,17 +71,17 @@ func PrintProcessStatus(p Process) {
 
 // FprintProcessStatus writes formatted status information for a Process to the given writer.
 func FprintProcessStatus(w io.Writer, p Process) {
-	fmt.Fprintf(w, "ProcessID: %s\n", p.ProcessID)
-	fmt.Fprintf(w, "Phase: %s\n", p.Phase)
-	fmt.Fprintf(w, "CreatedAt: %s\n", p.CreatedAt.ToTime().Local().Format(time.RFC1123))
+	_, _ = fmt.Fprintf(w, "ProcessID: %s\n", p.ProcessID)
+	_, _ = fmt.Fprintf(w, "Phase: %s\n", p.Phase)
+	_, _ = fmt.Fprintf(w, "CreatedAt: %s\n", p.CreatedAt.ToTime().Local().Format(time.RFC1123))
 	if p.FinishedAt != nil {
-		fmt.Fprintf(w, "FinishedAt: %s\n", p.FinishedAt.ToTime().Local().Format(time.RFC1123))
+		_, _ = fmt.Fprintf(w, "FinishedAt: %s\n", p.FinishedAt.ToTime().Local().Format(time.RFC1123))
 	} else {
-		fmt.Fprintln(w, "FinishedAt: The process is still running")
+		_, _ = fmt.Fprintln(w, "FinishedAt: The process is still running")
 	}
-	fmt.Fprintf(w, "TotalPatients: %d\n", p.TotalPatients)
-	fmt.Fprintf(w, "TotalBundles: %d\n", p.TotalBundles)
-	fmt.Fprintf(w, "DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
-	fmt.Fprintf(w, "SentBundles: %d\n", p.SentBundles)
-	fmt.Fprintf(w, "SkippedBundles: %d\n", p.SkippedBundles)
+	_, _ = fmt.Fprintf(w, "TotalPatients: %d\n", p.TotalPatients)
+	_, _ = fmt.Fprintf(w, "TotalBundles: %d\n", p.TotalBundles)
+	_, _ = fmt.Fprintf(w, "DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
+	_, _ = fmt.Fprintf(w, "SentBundles: %d\n", p.SentBundles)
+	_, _ = fmt.Fprintf(w, "SkippedBundles: %d\n", p.SkippedBundles)
 }

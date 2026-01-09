@@ -336,7 +336,7 @@ func TestClient_Integration_WithHTTPTestServer(t *testing.T) {
 		case "/api/v2/projects":
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`["Project1", "Project2", "Project3"]`))
+			_, _ = w.Write([]byte(`["Project1", "Project2", "Project3"]`))
 		case "/api/v2/process/start":
 			if r.Method != "POST" {
 				w.WriteHeader(http.StatusMethodNotAllowed)

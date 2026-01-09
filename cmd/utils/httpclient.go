@@ -151,14 +151,14 @@ func (c *Client) doWithRetry(req *http.Request, target interface{}) error {
 			"attempt", attempt,
 			"maxAttempts", c.maxRetries)
 
-		resp, err := c.httpClient.Do(req)
+		resp, err := c.httpClient.Do(req) //nolint:bodyclose // body is closed in handleResponse
 		if err != nil {
 			lastErr = fmt.Errorf("request failed (attempt %d/%d): %w", attempt, c.maxRetries, err)
 			slog.Debug("Request attempt failed", "error", err, "attempt", attempt)
 			continue
 		}
 
-		// Handle response
+		// Handle response (closes body via defer)
 		result, err := c.handleResponse(resp, target)
 		if err != nil {
 			lastErr = err

@@ -146,7 +146,7 @@ func TestExecuteStartTransfer_HTTPErrors(t *testing.T) {
 
 			err := ExecuteStartTransfer(h.Client, h.Stdout, "TestProject", nil)
 			h.AssertError(err, tt.errorContains)
-			h.AssertHTTPError(err, tt.expectedStatus)
+			_ = h.AssertHTTPError(err, tt.expectedStatus)
 		})
 	}
 }
