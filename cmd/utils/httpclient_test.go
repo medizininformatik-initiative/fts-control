@@ -507,3 +507,286 @@ func TestClient_PostJSON_ContextCancelled(t *testing.T) {
 		t.Errorf("Expected context.Canceled error, got: %v", err)
 	}
 }
+
+// Builder method tests
+
+func TestClient_WithHeader(t *testing.T) {
+	var capturedHeaders http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			capturedHeaders = req.Header
+			return newMockResponse(200, `{"success": true}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithHeader("X-Custom-Header", "custom-value")
+
+	var result map[string]bool
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if capturedHeaders.Get("X-Custom-Header") != "custom-value" {
+		t.Errorf("Expected X-Custom-Header to be 'custom-value', got: %s",
+			capturedHeaders.Get("X-Custom-Header"))
+	}
+}
+
+func TestClient_WithHeaders(t *testing.T) {
+	var capturedHeaders http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			capturedHeaders = req.Header
+			return newMockResponse(200, `{"success": true}`), nil
+		},
+	}
+
+	headers := map[string]string{
+		"X-Header-1": "value1",
+		"X-Header-2": "value2",
+	}
+	client := NewClientWithHTTPClient(mockClient).WithHeaders(headers)
+
+	var result map[string]bool
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if capturedHeaders.Get("X-Header-1") != "value1" {
+		t.Errorf("Expected X-Header-1 to be 'value1', got: %s",
+			capturedHeaders.Get("X-Header-1"))
+	}
+	if capturedHeaders.Get("X-Header-2") != "value2" {
+		t.Errorf("Expected X-Header-2 to be 'value2', got: %s",
+			capturedHeaders.Get("X-Header-2"))
+	}
+}
+
+func TestClient_WithBearerToken(t *testing.T) {
+	var capturedHeaders http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			capturedHeaders = req.Header
+			return newMockResponse(200, `{"success": true}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithBearerToken("secret-token-123")
+
+	var result map[string]bool
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	expected := "Bearer secret-token-123"
+	if capturedHeaders.Get("Authorization") != expected {
+		t.Errorf("Expected Authorization to be '%s', got: %s",
+			expected, capturedHeaders.Get("Authorization"))
+	}
+}
+
+func TestClient_WithAPIKey(t *testing.T) {
+	var capturedHeaders http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			capturedHeaders = req.Header
+			return newMockResponse(200, `{"success": true}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithAPIKey("api-key-456")
+
+	var result map[string]bool
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if capturedHeaders.Get("X-API-Key") != "api-key-456" {
+		t.Errorf("Expected X-API-Key to be 'api-key-456', got: %s",
+			capturedHeaders.Get("X-API-Key"))
+	}
+}
+
+func TestClient_ImmutableHeaders(t *testing.T) {
+	baseClient := NewClientWithHTTPClient(&MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			return newMockResponse(200, `{}`), nil
+		},
+	})
+
+	derivedClient := baseClient.WithHeader("X-Test", "value")
+
+	if len(baseClient.headers) != 0 {
+		t.Error("Base client was modified - immutability violated")
+	}
+
+	if derivedClient.headers.Get("X-Test") != "value" {
+		t.Error("Derived client should have the header")
+	}
+}
+
+func TestClient_ChainedHeaders(t *testing.T) {
+	var capturedHeaders http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			capturedHeaders = req.Header
+			return newMockResponse(200, `{}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithHeader("X-Header-1", "value1").
+		WithHeader("X-Header-2", "value2").
+		WithBearerToken("token")
+
+	err := client.GetJSON(context.Background(), "/api/v2/test", nil)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if capturedHeaders.Get("X-Header-1") != "value1" {
+		t.Error("First header not applied")
+	}
+	if capturedHeaders.Get("X-Header-2") != "value2" {
+		t.Error("Second header not applied")
+	}
+	if capturedHeaders.Get("Authorization") != "Bearer token" {
+		t.Error("Bearer token not applied")
+	}
+}
+
+func TestClient_HeadersAppliedToRetries(t *testing.T) {
+	var attemptHeaders []http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			headerCopy := make(http.Header)
+			for key, values := range req.Header {
+				headerCopy[key] = append([]string(nil), values...)
+			}
+			attemptHeaders = append(attemptHeaders, headerCopy)
+
+			if len(attemptHeaders) < 2 {
+				return nil, errors.New("network error")
+			}
+			return newMockResponse(200, `{}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithHeader("X-Custom", "value")
+	client.SetBaseBackoff(10 * time.Millisecond)
+
+	err := client.GetJSON(context.Background(), "/api/v2/test", nil)
+	if err != nil {
+		t.Fatalf("Expected success after retry, got: %v", err)
+	}
+
+	if len(attemptHeaders) != 2 {
+		t.Fatalf("Expected 2 attempts, got: %d", len(attemptHeaders))
+	}
+
+	for i, headers := range attemptHeaders {
+		if headers.Get("X-Custom") != "value" {
+			t.Errorf("Header missing in attempt %d", i+1)
+		}
+	}
+}
+
+func TestClient_HeadersNotOverwriteRequestHeaders(t *testing.T) {
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			if req.Header.Get("Content-Type") != "application/json" {
+				t.Errorf("Request Content-Type should not be overwritten, got: %s",
+					req.Header.Get("Content-Type"))
+			}
+			if req.Header.Get("X-Custom") != "value" {
+				t.Error("Custom header should be applied")
+			}
+			return newMockResponse(200, `{}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithHeader("Content-Type", "text/plain").
+		WithHeader("X-Custom", "value")
+
+	payload := map[string]string{"key": "value"}
+	var result map[string]interface{}
+	err := client.PostJSON(context.Background(), "/api/v2/test", payload, &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+}
+
+func TestClient_CopyHeaders_DeepCopy(t *testing.T) {
+	original := make(http.Header)
+	original.Set("X-Original", "value1")
+	original.Add("X-Multi", "value1")
+	original.Add("X-Multi", "value2")
+
+	copied := copyHeaders(original)
+
+	copied.Set("X-Original", "modified")
+	copied.Set("X-New", "newvalue")
+	copied.Add("X-Multi", "value3")
+
+	if original.Get("X-Original") != "value1" {
+		t.Error("Original header was modified")
+	}
+	if original.Get("X-New") != "" {
+		t.Error("Original should not have new header")
+	}
+	if len(original["X-Multi"]) != 2 {
+		t.Error("Original multi-value header was modified")
+	}
+}
+
+func TestClient_WithBaseBackoff_Immutable(t *testing.T) {
+	client := NewClient()
+	originalBackoff := client.baseBackoff
+
+	clientWithNewBackoff := client.WithBaseBackoff(5 * time.Second)
+
+	if client.baseBackoff != originalBackoff {
+		t.Error("Original client baseBackoff was mutated")
+	}
+
+	if clientWithNewBackoff.baseBackoff != 5*time.Second {
+		t.Error("New client should have updated baseBackoff")
+	}
+}
+
+func TestClient_HeadersInPostJSON(t *testing.T) {
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			if req.Header.Get("X-Trace-ID") != "trace-123" {
+				t.Error("Custom header not applied to POST request")
+			}
+			if req.Header.Get("Content-Type") != "application/json" {
+				t.Error("Content-Type should be application/json for POST with body")
+			}
+			return newMockResponse(201, `{"id": 42}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithHeader("X-Trace-ID", "trace-123")
+
+	payload := map[string]string{"name": "test"}
+	var result map[string]int
+	err := client.PostJSON(context.Background(), "/api/v2/test", payload, &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	if result["id"] != 42 {
+		t.Errorf("Expected id=42, got: %d", result["id"])
+	}
+}
