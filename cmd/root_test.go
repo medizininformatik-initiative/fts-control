@@ -29,6 +29,6 @@ func TestConfigIsLoaded(t *testing.T) {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		t.Fatalf("config.yaml konnte nicht geladen werden: %v", err)
+		t.Fatalf("config.yaml could not be loaded: %v", err)
 	}
 }

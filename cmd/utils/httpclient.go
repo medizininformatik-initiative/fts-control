@@ -24,10 +24,18 @@ type Client struct {
 	baseBackoff time.Duration
 }
 
+// testClient is used for testing to inject a mock client.
+// In production, this is always nil.
+var testClient *Client
+
 // NewClient creates a new HTTP client with default configuration:
 // - 30 second timeout
 // - 3 retry attempts with exponential backoff (1s, 2s, 4s)
+// In tests, returns the injected test client if set.
 func NewClient() *Client {
+	if testClient != nil {
+		return testClient
+	}
 	return &Client{
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
@@ -35,6 +43,18 @@ func NewClient() *Client {
 		maxRetries:  3,
 		baseBackoff: 1 * time.Second,
 	}
+}
+
+// SetTestClient injects a test client for use in tests.
+// This should only be used in test code.
+func SetTestClient(client *Client) {
+	testClient = client
+}
+
+// ClearTestClient removes the injected test client.
+// This should be called in test cleanup.
+func ClearTestClient() {
+	testClient = nil
 }
 
 // NewClientWithHTTPClient creates a client with a custom HTTPClient.
@@ -45,6 +65,12 @@ func NewClientWithHTTPClient(httpClient HTTPClient) *Client {
 		maxRetries:  3,
 		baseBackoff: 1 * time.Second,
 	}
+}
+
+// SetBaseBackoff sets the base backoff duration for retries.
+// This is primarily useful in tests to speed up retry scenarios.
+func (c *Client) SetBaseBackoff(d time.Duration) {
+	c.baseBackoff = d
 }
 
 // GetJSON performs a GET request and unmarshals the JSON response into target.

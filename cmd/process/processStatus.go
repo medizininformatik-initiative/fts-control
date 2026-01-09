@@ -2,12 +2,12 @@ package process
 
 import (
 	"fmt"
+	"io"
+
 	"ftsctl/cmd/utils"
 
 	"github.com/spf13/cobra"
 )
-
-var processId string
 
 var StatusCmd = &cobra.Command{
 	Use:          "status",
@@ -15,24 +15,30 @@ var StatusCmd = &cobra.Command{
 	Long:         `Shows the process status of the selected process ID`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client := utils.NewClient()
-		var prcss utils.Process
-
-		if err := client.GetJSON("/api/v2/process/status/"+processId, &prcss); err != nil {
-			return fmt.Errorf("failed to fetch status for process %q: %w", processId, err)
-		}
-
-		utils.DivdlnL()
-		fmt.Printf("Representation of the Process with the ProcessID: %s \n", processId)
-		utils.DivdlnL()
-		utils.PrintProcessStatus(prcss)
-		utils.DivdlnS()
-		return nil
+		processId, _ := cmd.Flags().GetString("processId")
+		return ExecuteProcessStatus(utils.NewClient(), cmd.OutOrStdout(), processId)
 	},
 }
 
+// ExecuteProcessStatus fetches and displays the status of a specific process.
+// This function is exported for testing.
+func ExecuteProcessStatus(client *utils.Client, w io.Writer, procId string) error {
+	var prcss utils.Process
+
+	if err := client.GetJSON("/api/v2/process/status/"+procId, &prcss); err != nil {
+		return fmt.Errorf("failed to fetch status for process %q: %w", procId, err)
+	}
+
+	utils.FprintDivdlnL(w)
+	fmt.Fprintf(w, "Representation of the Process with the ProcessID: %s \n", procId)
+	utils.FprintDivdlnL(w)
+	utils.FprintProcessStatus(w, prcss)
+	utils.FprintDivdlnS(w)
+	return nil
+}
+
 func init() {
-	StatusCmd.Flags().StringVarP(&processId, "processId", "i", "", "Process ID to query")
+	StatusCmd.Flags().StringP("processId", "i", "", "Process ID to query")
 	_ = StatusCmd.MarkFlagRequired("processId")
 	Cmd.AddCommand(StatusCmd)
 }

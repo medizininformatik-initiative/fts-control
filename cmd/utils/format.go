@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"time"
 )
 
@@ -10,13 +12,23 @@ import (
 // Large
 
 func DivdlnL() {
-	fmt.Println("==================================================================")
+	FprintDivdlnL(os.Stdout)
+}
+
+// FprintDivdlnL writes a large dividing line to the given writer.
+func FprintDivdlnL(w io.Writer) {
+	fmt.Fprintln(w, "==================================================================")
 }
 
 // Small
 
 func DivdlnS() {
-	fmt.Println("------------------------------------------------------------------")
+	FprintDivdlnS(os.Stdout)
+}
+
+// FprintDivdlnS writes a small dividing line to the given writer.
+func FprintDivdlnS(w io.Writer) {
+	fmt.Fprintln(w, "------------------------------------------------------------------")
 }
 
 // Logo
@@ -52,19 +64,24 @@ func GenerateLogoV2() string {
 	return logo
 }
 
-// PrintProcessStatus prints formatted status information for a Process.
+// PrintProcessStatus prints formatted status information for a Process to stdout.
 func PrintProcessStatus(p Process) {
-	fmt.Printf("ProcessID: %s\n", p.ProcessID)
-	fmt.Printf("Phase: %s\n", p.Phase)
-	fmt.Printf("CreatedAt: %s\n", p.CreatedAt.ToTime().Local().Format(time.RFC1123))
+	FprintProcessStatus(os.Stdout, p)
+}
+
+// FprintProcessStatus writes formatted status information for a Process to the given writer.
+func FprintProcessStatus(w io.Writer, p Process) {
+	fmt.Fprintf(w, "ProcessID: %s\n", p.ProcessID)
+	fmt.Fprintf(w, "Phase: %s\n", p.Phase)
+	fmt.Fprintf(w, "CreatedAt: %s\n", p.CreatedAt.ToTime().Local().Format(time.RFC1123))
 	if p.FinishedAt != nil {
-		fmt.Printf("FinishedAt: %s\n", p.FinishedAt.ToTime().Local().Format(time.RFC1123))
+		fmt.Fprintf(w, "FinishedAt: %s\n", p.FinishedAt.ToTime().Local().Format(time.RFC1123))
 	} else {
-		fmt.Println("FinishedAt: The process is still running")
+		fmt.Fprintln(w, "FinishedAt: The process is still running")
 	}
-	fmt.Printf("TotalPatients: %d\n", p.TotalPatients)
-	fmt.Printf("TotalBundles: %d\n", p.TotalBundles)
-	fmt.Printf("DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
-	fmt.Printf("SentBundles: %d\n", p.SentBundles)
-	fmt.Printf("SkippedBundles: %d\n", p.SkippedBundles)
+	fmt.Fprintf(w, "TotalPatients: %d\n", p.TotalPatients)
+	fmt.Fprintf(w, "TotalBundles: %d\n", p.TotalBundles)
+	fmt.Fprintf(w, "DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
+	fmt.Fprintf(w, "SentBundles: %d\n", p.SentBundles)
+	fmt.Fprintf(w, "SkippedBundles: %d\n", p.SkippedBundles)
 }
