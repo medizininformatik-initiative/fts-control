@@ -1,11 +1,7 @@
 package project
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log/slog"
-	"net/http"
 
 	"ftsctl/cmd/utils"
 	"github.com/spf13/cobra"
@@ -86,7 +82,6 @@ var ConfigCmd = &cobra.Command{
 	Short: "Project configuration",
 	Long:  `Shows the project configuration of the selected project.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if !cmd.Flags().Changed("projectName") {
 			utils.DivdlnL()
 			fmt.Printf("Warning: No --projectName (-n) specified.\n\nPlease set the Flag to retrieve the Project Configuration of a Project.\n")
@@ -94,42 +89,10 @@ var ConfigCmd = &cobra.Command{
 			return
 		}
 
-		apiUrl := utils.BuildApiUrl("/api/v2/projects/" + PrjName)
-		client := &http.Client{}
-		req, err := http.NewRequest("GET", apiUrl, nil)
+		client := utils.NewClient()
+		var pConfig Config
 
-		if err != nil {
-			slog.Error("Error creating the request", "error", err)
-			return
-		}
-
-		resp, err := client.Do(req)
-		if err != nil {
-			slog.Error("Error sending the request", "error", err)
-			return
-		}
-
-		defer func() {
-			if err := resp.Body.Close(); err != nil {
-				slog.Warn("Error closing response body", "error", err)
-			}
-		}()
-
-		if resp.StatusCode != http.StatusOK {
-			slog.Error("Unexpected status code", "status", resp.StatusCode)
-			return
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			slog.Error("Error reading the response", "error", err)
-			return
-		}
-
-		pConfig := Config{}
-		err = json.Unmarshal(body, &pConfig)
-		if err != nil {
-			slog.Error("Error decoding JSON", "error", err)
+		if err := client.GetJSON("/api/v2/projects/"+PrjName, &pConfig); utils.LogHTTPError(err, "fetch project config") {
 			return
 		}
 
