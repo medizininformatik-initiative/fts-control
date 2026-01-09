@@ -1,6 +1,7 @@
 package project
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -96,7 +97,7 @@ var ConfigCmd = &cobra.Command{
 func ExecuteProjectConfig(client *utils.Client, w io.Writer, projectName string) error {
 	var pConfig Config
 
-	if err := client.GetJSON(utils.EndpointProjectConfig(projectName), &pConfig); err != nil {
+	if err := client.GetJSON(context.Background(), utils.EndpointProjectConfig(projectName), &pConfig); err != nil {
 		return fmt.Errorf("failed to fetch configuration for project %q: %w", projectName, err)
 	}
 

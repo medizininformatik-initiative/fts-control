@@ -1,6 +1,7 @@
 package process
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -25,7 +26,7 @@ var StatusCmd = &cobra.Command{
 func ExecuteProcessStatus(client *utils.Client, w io.Writer, procId string) error {
 	var prcss utils.Process
 
-	if err := client.GetJSON(utils.EndpointProcessStatus(procId), &prcss); err != nil {
+	if err := client.GetJSON(context.Background(), utils.EndpointProcessStatus(procId), &prcss); err != nil {
 		return fmt.Errorf("failed to fetch status for process %q: %w", procId, err)
 	}
 

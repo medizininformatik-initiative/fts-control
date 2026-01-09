@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -53,7 +54,7 @@ func TestClient_GetJSON_Success(t *testing.T) {
 	client := NewClientWithHTTPClient(mockClient)
 	var projects []string
 
-	err := client.GetJSON("/api/v2/projects", &projects)
+	err := client.GetJSON(context.Background(), "/api/v2/projects", &projects)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -77,7 +78,7 @@ func TestClient_GetJSON_EmptyResponse(t *testing.T) {
 	client := NewClientWithHTTPClient(mockClient)
 	var result interface{}
 
-	err := client.GetJSON("/api/v2/test", &result)
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
 	if err != nil {
 		t.Fatalf("Expected no error for empty response, got: %v", err)
 	}
@@ -93,7 +94,7 @@ func TestClient_GetJSON_HTTPError(t *testing.T) {
 	client := NewClientWithHTTPClient(mockClient)
 	var result interface{}
 
-	err := client.GetJSON("/api/v2/test", &result)
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
 	if err == nil {
 		t.Fatal("Expected error for 404 response")
 	}
@@ -129,7 +130,7 @@ func TestClient_PostJSON_Success(t *testing.T) {
 	payload := map[string]string{"key": "value"}
 	var result map[string]bool
 
-	err := client.PostJSON("/api/v2/test", payload, &result)
+	err := client.PostJSON(context.Background(), "/api/v2/test", payload, &result)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -155,7 +156,7 @@ func TestClient_PostJSON_NilBody(t *testing.T) {
 
 	client := NewClientWithHTTPClient(mockClient)
 
-	err := client.PostJSON("/api/v2/test", nil, nil)
+	err := client.PostJSON(context.Background(), "/api/v2/test", nil, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -170,7 +171,7 @@ func TestClient_PostJSON_AcceptedStatus(t *testing.T) {
 
 	client := NewClientWithHTTPClient(mockClient)
 
-	err := client.PostJSON("/api/v2/test", nil, nil)
+	err := client.PostJSON(context.Background(), "/api/v2/test", nil, nil)
 	if err != nil {
 		t.Fatalf("Expected no error for 202 Accepted, got: %v", err)
 	}
@@ -194,7 +195,7 @@ func TestClient_Retry_OnNetworkError(t *testing.T) {
 	client.baseBackoff = 10 * time.Millisecond // Speed up test
 	var result map[string]bool
 
-	err := client.GetJSON("/api/v2/test", &result)
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
 	if err != nil {
 		t.Fatalf("Expected success after retries, got: %v", err)
 	}
@@ -222,7 +223,7 @@ func TestClient_Retry_OnServerError(t *testing.T) {
 	client.baseBackoff = 10 * time.Millisecond // Speed up test
 	var result map[string]bool
 
-	err := client.GetJSON("/api/v2/test", &result)
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
 	if err != nil {
 		t.Fatalf("Expected success after retries, got: %v", err)
 	}
@@ -246,7 +247,7 @@ func TestClient_NoRetry_OnClientError(t *testing.T) {
 	client.baseBackoff = 10 * time.Millisecond
 	var result interface{}
 
-	err := client.GetJSON("/api/v2/test", &result)
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
 	if err == nil {
 		t.Fatal("Expected error for 400 response")
 	}
@@ -271,7 +272,7 @@ func TestClient_MaxRetries_Exceeded(t *testing.T) {
 	client.baseBackoff = 10 * time.Millisecond
 	var result interface{}
 
-	err := client.GetJSON("/api/v2/test", &result)
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
 	if err == nil {
 		t.Fatal("Expected error after max retries")
 	}
@@ -361,8 +362,8 @@ func TestClient_Integration_WithHTTPTestServer(t *testing.T) {
 	t.Run("GET projects", func(t *testing.T) {
 		var projects []string
 		// Note: We need to build URL manually for test server
-		req, _ := http.NewRequest("GET", server.URL+"/api/v2/projects", nil)
-		err := client.doWithRetry(req, &projects)
+		req, _ := http.NewRequestWithContext(context.Background(), "GET", server.URL+"/api/v2/projects", nil)
+		err := client.doWithRetry(context.Background(), req, &projects)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -372,10 +373,137 @@ func TestClient_Integration_WithHTTPTestServer(t *testing.T) {
 	})
 
 	t.Run("POST start process", func(t *testing.T) {
-		req, _ := http.NewRequest("POST", server.URL+"/api/v2/process/start", nil)
-		err := client.doWithRetry(req, nil)
+		req, _ := http.NewRequestWithContext(context.Background(), "POST", server.URL+"/api/v2/process/start", nil)
+		err := client.doWithRetry(context.Background(), req, nil)
 		if err != nil {
 			t.Fatalf("Expected no error for 202 response, got: %v", err)
 		}
 	})
+}
+
+// Context cancellation tests
+
+func TestClient_GetJSON_ContextCancelled(t *testing.T) {
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			// Simulate a slow request that respects context
+			select {
+			case <-req.Context().Done():
+				return nil, req.Context().Err()
+			case <-time.After(100 * time.Millisecond):
+				return newMockResponse(200, `{"success": true}`), nil
+			}
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient)
+
+	// Create a context that's already cancelled
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	var result interface{}
+	err := client.GetJSON(ctx, "/api/v2/test", &result)
+	if err == nil {
+		t.Fatal("Expected error for cancelled context")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("Expected context.Canceled error, got: %v", err)
+	}
+}
+
+func TestClient_GetJSON_ContextTimeout(t *testing.T) {
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			// Simulate a slow request
+			select {
+			case <-req.Context().Done():
+				return nil, req.Context().Err()
+			case <-time.After(200 * time.Millisecond):
+				return newMockResponse(200, `{"success": true}`), nil
+			}
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient)
+
+	// Create a context with a short timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	var result interface{}
+	err := client.GetJSON(ctx, "/api/v2/test", &result)
+	if err == nil {
+		t.Fatal("Expected error for context timeout")
+	}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("Expected context.DeadlineExceeded error, got: %v", err)
+	}
+}
+
+func TestClient_Retry_ContextCancelledDuringBackoff(t *testing.T) {
+	var attempts int32
+
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			atomic.AddInt32(&attempts, 1)
+			// Always fail to trigger retry
+			return nil, errors.New("network error")
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient)
+	client.baseBackoff = 100 * time.Millisecond // Long enough backoff to cancel during
+
+	// Create a context that we'll cancel after the first attempt
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Cancel context after a short delay (after first attempt but during backoff)
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		cancel()
+	}()
+
+	var result interface{}
+	err := client.GetJSON(ctx, "/api/v2/test", &result)
+	if err == nil {
+		t.Fatal("Expected error when context cancelled during backoff")
+	}
+
+	// Should have only made 1 attempt before context was cancelled during backoff
+	if atomic.LoadInt32(&attempts) != 1 {
+		t.Errorf("Expected 1 attempt before cancel, got: %d", attempts)
+	}
+
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("Expected context.Canceled error, got: %v", err)
+	}
+}
+
+func TestClient_PostJSON_ContextCancelled(t *testing.T) {
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			select {
+			case <-req.Context().Done():
+				return nil, req.Context().Err()
+			case <-time.After(100 * time.Millisecond):
+				return newMockResponse(200, `{"success": true}`), nil
+			}
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	payload := map[string]string{"key": "value"}
+	var result map[string]bool
+	err := client.PostJSON(ctx, "/api/v2/test", payload, &result)
+	if err == nil {
+		t.Fatal("Expected error for cancelled context")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("Expected context.Canceled error, got: %v", err)
+	}
 }
