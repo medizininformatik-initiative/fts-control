@@ -7,7 +7,7 @@ import (
 )
 
 func TestRunCmdTests(t *testing.T) {
-	cmd := exec.Command("go", "test", "./cmd", "-v")
+	cmd := exec.Command("go", "test", "./cmd/...", "-v")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

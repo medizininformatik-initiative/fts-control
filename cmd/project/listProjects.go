@@ -2,8 +2,10 @@ package project
 
 import (
 	"fmt"
+	"io"
 
 	"ftsctl/cmd/utils"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,25 +15,29 @@ var ListProjectsCmd = &cobra.Command{
 	Long:         `List of all available projects from the API.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client := utils.NewClient()
-		var projects []string
-
-		if err := client.GetJSON("/api/v2/projects", &projects); err != nil {
-			return fmt.Errorf("failed to fetch projects: %w", err)
-		}
-
-		utils.DivdlnL()
-		fmt.Println("List of all available projects:")
-		utils.DivdlnL()
-		for i, project := range projects {
-			fmt.Printf("%d. %s\n", i+1, project)
-		}
-		utils.DivdlnS()
-		return nil
+		return ExecuteListProjects(utils.NewClient(), cmd.OutOrStdout())
 	},
 }
 
-func init() {
+// ExecuteListProjects fetches and displays the list of projects.
+// This function is exported for testing.
+func ExecuteListProjects(client *utils.Client, w io.Writer) error {
+	var projects []string
 
+	if err := client.GetJSON("/api/v2/projects", &projects); err != nil {
+		return fmt.Errorf("failed to fetch projects: %w", err)
+	}
+
+	utils.FprintDivdlnL(w)
+	fmt.Fprintln(w, "List of all available projects:")
+	utils.FprintDivdlnL(w)
+	for i, project := range projects {
+		fmt.Fprintf(w, "%d. %s\n", i+1, project)
+	}
+	utils.FprintDivdlnS(w)
+	return nil
+}
+
+func init() {
 	Cmd.AddCommand(ListProjectsCmd)
 }

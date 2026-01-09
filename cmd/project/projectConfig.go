@@ -2,8 +2,10 @@ package project
 
 import (
 	"fmt"
+	"io"
 
 	"ftsctl/cmd/utils"
+
 	"github.com/spf13/cobra"
 )
 
@@ -75,6 +77,7 @@ type ResearchDomainAgent struct {
 	Project string `json:"project"`
 }
 
+// PrjName is exported for backward compatibility with existing tests
 var PrjName string
 
 var ConfigCmd = &cobra.Command{
@@ -83,51 +86,57 @@ var ConfigCmd = &cobra.Command{
 	Long:         `Shows the project configuration of the selected project.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client := utils.NewClient()
-		var pConfig Config
-
-		if err := client.GetJSON("/api/v2/projects/"+PrjName, &pConfig); err != nil {
-			return fmt.Errorf("failed to fetch configuration for project %q: %w", PrjName, err)
-		}
-
-		// Formatted Output
-		utils.DivdlnL()
-		fmt.Printf("Project configuration with the Project Name: %s \n", PrjName)
-		utils.DivdlnL()
-
-		fmt.Printf("CohortSelector - TrustCenterAgent:\n")
-		fmt.Printf("  Server BaseURL: %s\n", pConfig.CohortSelector.TrustCenterAgent.Server.BaseUrl)
-		fmt.Printf("  Domain: %s\n", pConfig.CohortSelector.TrustCenterAgent.Domain)
-		fmt.Printf("  Patient Identifier System: %s\n", pConfig.CohortSelector.TrustCenterAgent.PatientIdentifierSystem)
-		fmt.Printf("  Policy System: %s\n", pConfig.CohortSelector.TrustCenterAgent.PolicySystem)
-		fmt.Println("  Policies:")
-		for _, policy := range pConfig.CohortSelector.TrustCenterAgent.Policies {
-			fmt.Printf("    - %s\n", policy)
-		}
-
-		utils.DivdlnS()
-		fmt.Printf("DataSelector - Everything:\n")
-		fmt.Printf("  FHIR Server BaseURL: %s\n", pConfig.DataSelector.Everything.FhirServer.BaseUrl)
-		fmt.Printf("  Resolve Patient Identifier System: %s\n", pConfig.DataSelector.Everything.Resolve.PatientIdentifierSystem)
-
-		utils.DivdlnS()
-		fmt.Printf("Deidentificator - Deidentifhir:\n")
-		fmt.Printf("  TrustCenterAgent Server BaseURL: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Server.BaseUrl)
-		fmt.Printf("  Max Date Shift: %s\n", pConfig.Deidentificator.Deidentifhir.MaxDateShift)
-		fmt.Printf("  Deidentifhir Config: %s\n", pConfig.Deidentificator.Deidentifhir.DeidentifhirConfig)
-		fmt.Printf("  Scraper Config: %s\n", pConfig.Deidentificator.Deidentifhir.ScraperConfig)
-		fmt.Println("  Domains:")
-		fmt.Printf("    Pseudonym: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.Pseudonym)
-		fmt.Printf("    Salt: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.Salt)
-		fmt.Printf("    DateShift: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.DateShift)
-
-		utils.DivdlnS()
-		fmt.Printf("BundleSender - ResearchDomainAgent:\n")
-		fmt.Printf("  Server BaseURL: %s\n", pConfig.BundleSender.ResearchDomainAgent.Server.BaseUrl)
-		fmt.Printf("  Project: %s\n", pConfig.BundleSender.ResearchDomainAgent.Project)
-		utils.DivdlnS()
-		return nil
+		projectName, _ := cmd.Flags().GetString("projectName")
+		return ExecuteProjectConfig(utils.NewClient(), cmd.OutOrStdout(), projectName)
 	},
+}
+
+// ExecuteProjectConfig fetches and displays the project configuration.
+// This function is exported for testing.
+func ExecuteProjectConfig(client *utils.Client, w io.Writer, projectName string) error {
+	var pConfig Config
+
+	if err := client.GetJSON("/api/v2/projects/"+projectName, &pConfig); err != nil {
+		return fmt.Errorf("failed to fetch configuration for project %q: %w", projectName, err)
+	}
+
+	// Formatted Output
+	utils.FprintDivdlnL(w)
+	fmt.Fprintf(w, "Project configuration with the Project Name: %s \n", projectName)
+	utils.FprintDivdlnL(w)
+
+	fmt.Fprintln(w, "CohortSelector - TrustCenterAgent:")
+	fmt.Fprintf(w, "  Server BaseURL: %s\n", pConfig.CohortSelector.TrustCenterAgent.Server.BaseUrl)
+	fmt.Fprintf(w, "  Domain: %s\n", pConfig.CohortSelector.TrustCenterAgent.Domain)
+	fmt.Fprintf(w, "  Patient Identifier System: %s\n", pConfig.CohortSelector.TrustCenterAgent.PatientIdentifierSystem)
+	fmt.Fprintf(w, "  Policy System: %s\n", pConfig.CohortSelector.TrustCenterAgent.PolicySystem)
+	fmt.Fprintln(w, "  Policies:")
+	for _, policy := range pConfig.CohortSelector.TrustCenterAgent.Policies {
+		fmt.Fprintf(w, "    - %s\n", policy)
+	}
+
+	utils.FprintDivdlnS(w)
+	fmt.Fprintln(w, "DataSelector - Everything:")
+	fmt.Fprintf(w, "  FHIR Server BaseURL: %s\n", pConfig.DataSelector.Everything.FhirServer.BaseUrl)
+	fmt.Fprintf(w, "  Resolve Patient Identifier System: %s\n", pConfig.DataSelector.Everything.Resolve.PatientIdentifierSystem)
+
+	utils.FprintDivdlnS(w)
+	fmt.Fprintln(w, "Deidentificator - Deidentifhir:")
+	fmt.Fprintf(w, "  TrustCenterAgent Server BaseURL: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Server.BaseUrl)
+	fmt.Fprintf(w, "  Max Date Shift: %s\n", pConfig.Deidentificator.Deidentifhir.MaxDateShift)
+	fmt.Fprintf(w, "  Deidentifhir Config: %s\n", pConfig.Deidentificator.Deidentifhir.DeidentifhirConfig)
+	fmt.Fprintf(w, "  Scraper Config: %s\n", pConfig.Deidentificator.Deidentifhir.ScraperConfig)
+	fmt.Fprintln(w, "  Domains:")
+	fmt.Fprintf(w, "    Pseudonym: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.Pseudonym)
+	fmt.Fprintf(w, "    Salt: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.Salt)
+	fmt.Fprintf(w, "    DateShift: %s\n", pConfig.Deidentificator.Deidentifhir.TrustCenterAgent.Domains.DateShift)
+
+	utils.FprintDivdlnS(w)
+	fmt.Fprintln(w, "BundleSender - ResearchDomainAgent:")
+	fmt.Fprintf(w, "  Server BaseURL: %s\n", pConfig.BundleSender.ResearchDomainAgent.Server.BaseUrl)
+	fmt.Fprintf(w, "  Project: %s\n", pConfig.BundleSender.ResearchDomainAgent.Project)
+	utils.FprintDivdlnS(w)
+	return nil
 }
 
 func init() {
