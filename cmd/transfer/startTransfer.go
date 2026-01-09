@@ -1,6 +1,7 @@
 package transfer
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -42,7 +43,7 @@ func ExecuteStartTransfer(client *utils.Client, w io.Writer, projectName string,
 		body = ids
 	}
 
-	if err := client.PostJSON(endpoint, body, nil); err != nil {
+	if err := client.PostJSON(context.Background(), endpoint, body, nil); err != nil {
 		return fmt.Errorf("failed to start transfer for project %q: %w", projectName, err)
 	}
 

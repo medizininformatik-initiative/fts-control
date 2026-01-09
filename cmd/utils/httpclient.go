@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -74,24 +75,26 @@ func (c *Client) SetBaseBackoff(d time.Duration) {
 }
 
 // GetJSON performs a GET request and unmarshals the JSON response into target.
-func (c *Client) GetJSON(endpoint string, target interface{}) error {
+// The context controls cancellation and timeouts for the request.
+func (c *Client) GetJSON(ctx context.Context, endpoint string, target interface{}) error {
 	url, err := BuildAPIURL(endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to build API URL: %w", err)
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	return c.doWithRetry(req, target)
+	return c.doWithRetry(ctx, req, target)
 }
 
 // PostJSON performs a POST request with optional JSON body and unmarshals the response.
 // If body is nil, sends an empty POST request.
 // If target is nil, response body is not unmarshaled.
-func (c *Client) PostJSON(endpoint string, body interface{}, target interface{}) error {
+// The context controls cancellation and timeouts for the request.
+func (c *Client) PostJSON(ctx context.Context, endpoint string, body interface{}, target interface{}) error {
 	url, err := BuildAPIURL(endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to build API URL: %w", err)
@@ -109,7 +112,7 @@ func (c *Client) PostJSON(endpoint string, body interface{}, target interface{})
 		bodyReader = bytes.NewReader(jsonData)
 	}
 
-	req, err := http.NewRequest("POST", url, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bodyReader)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -122,18 +125,30 @@ func (c *Client) PostJSON(endpoint string, body interface{}, target interface{})
 		}
 	}
 
-	return c.doWithRetry(req, target)
+	return c.doWithRetry(ctx, req, target)
 }
 
 // doWithRetry executes the request with exponential backoff retry logic.
-func (c *Client) doWithRetry(req *http.Request, target interface{}) error {
+// It respects context cancellation and will abort retries if the context is done.
+func (c *Client) doWithRetry(ctx context.Context, req *http.Request, target interface{}) error {
 	var lastErr error
 
 	for attempt := 1; attempt <= c.maxRetries; attempt++ {
+		// Check context before each attempt
+		if err := ctx.Err(); err != nil {
+			return fmt.Errorf("request cancelled: %w", err)
+		}
+
 		if attempt > 1 {
 			backoff := c.calculateBackoff(attempt - 1)
 			slog.Debug("Retrying request", "attempt", attempt, "backoff", backoff, "url", req.URL.String())
-			time.Sleep(backoff)
+
+			// Use select to allow context cancellation during backoff
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("request cancelled during retry backoff: %w", ctx.Err())
+			case <-time.After(backoff):
+			}
 
 			// Recreate body reader for retry if needed
 			if req.GetBody != nil {
