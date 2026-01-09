@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"ftsctl/cmd/testutil"
+	"ftsctl/cmd/utils"
 )
 
 func TestExecuteStartTransfer_Success(t *testing.T) {
@@ -182,7 +183,7 @@ func TestExecuteStartTransfer_ProjectNameInURL(t *testing.T) {
 
 			_ = ExecuteStartTransfer(h.Client, h.Stdout, tt.projectName, nil)
 
-			expectedPath := "/api/v2/process/" + tt.projectName + "/start"
+			expectedPath := utils.EndpointTransferStart(tt.projectName)
 			if !strings.HasSuffix(capturedPath, expectedPath) {
 				t.Errorf("Expected URL path to end with %q, got: %s", expectedPath, capturedPath)
 			}

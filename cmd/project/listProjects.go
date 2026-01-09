@@ -24,7 +24,7 @@ var ListProjectsCmd = &cobra.Command{
 func ExecuteListProjects(client *utils.Client, w io.Writer) error {
 	var projects []string
 
-	if err := client.GetJSON("/api/v2/projects", &projects); err != nil {
+	if err := client.GetJSON(utils.EndpointProjects, &projects); err != nil {
 		return fmt.Errorf("failed to fetch projects: %w", err)
 	}
 

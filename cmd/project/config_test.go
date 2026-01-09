@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"ftsctl/cmd/testutil"
+	"ftsctl/cmd/utils"
 )
 
 func TestExecuteProjectConfig_Success(t *testing.T) {
@@ -15,8 +16,9 @@ func TestExecuteProjectConfig_Success(t *testing.T) {
 		if req.Method != "GET" {
 			t.Errorf("Expected GET method, got: %s", req.Method)
 		}
-		if !strings.Contains(req.URL.Path, "/api/v2/projects/TestProject") {
-			t.Errorf("Expected path to contain /api/v2/projects/TestProject, got: %s", req.URL.Path)
+		expectedPath := utils.EndpointProjectConfig("TestProject")
+		if !strings.Contains(req.URL.Path, expectedPath) {
+			t.Errorf("Expected path to contain %s, got: %s", expectedPath, req.URL.Path)
 		}
 		return h.MockResponse(200, testutil.SampleProjectConfig), nil
 	}

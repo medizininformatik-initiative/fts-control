@@ -35,7 +35,7 @@ patients for the specified project.`,
 // If ids is empty/nil, transfers all consented patients.
 // This function is exported for testing.
 func ExecuteStartTransfer(client *utils.Client, w io.Writer, projectName string, ids []string) error {
-	endpoint := fmt.Sprintf("/api/v2/process/%s/start", projectName)
+	endpoint := utils.EndpointTransferStart(projectName)
 
 	var body interface{}
 	if len(ids) > 0 {
