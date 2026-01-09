@@ -15,15 +15,11 @@ var startTransferCmd = &cobra.Command{
 	Long: `Start a transfer of patients with IDs provided in the request
 body, or if none are provided, start a transfer of all consented
 patients for the specified project.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		projectName, _ := cmd.Flags().GetString("projectName")
-		if projectName == "" {
-			fmt.Println("ERROR: The --projectName (-n) flag is required!")
-			fmt.Println("Usage: ftsctl startTransfer --projectName exampleProject [--ids id1,id2,id3]")
-			return
-		}
-
 		idsStr, _ := cmd.Flags().GetString("ids")
+
 		var ids []string
 		if idsStr != "" {
 			ids = strings.Split(idsStr, ",")
@@ -37,8 +33,8 @@ patients for the specified project.`,
 			body = ids
 		}
 
-		if err := client.PostJSON(endpoint, body, nil); utils.PrintHTTPError(err) {
-			return
+		if err := client.PostJSON(endpoint, body, nil); err != nil {
+			return fmt.Errorf("failed to start transfer for project %q: %w", projectName, err)
 		}
 
 		utils.DivdlnL()
@@ -52,12 +48,13 @@ patients for the specified project.`,
 		}
 		slog.Debug("Transfer request completed", "project", projectName)
 		utils.DivdlnS()
+		return nil
 	},
 }
 
 func init() {
 	startTransferCmd.Flags().StringP("projectName", "n", "", "Project name (required)")
 	startTransferCmd.Flags().StringP("ids", "i", "", "Comma-separated list of patient IDs (optional)")
-
+	_ = startTransferCmd.MarkFlagRequired("projectName")
 	Cmd.AddCommand(startTransferCmd)
 }

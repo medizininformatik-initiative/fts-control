@@ -8,16 +8,16 @@ import (
 )
 
 var ListProjectsCmd = &cobra.Command{
-	Use:   "list", // /api/v2/projects
-	Short: "List of all available projects",
-	Long:  `List of all available projects from the API.`,
-
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:          "list",
+	Short:        "List of all available projects",
+	Long:         `List of all available projects from the API.`,
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		client := utils.NewClient()
 		var projects []string
 
-		if err := client.GetJSON("/api/v2/projects", &projects); utils.LogHTTPError(err, "fetch projects") {
-			return
+		if err := client.GetJSON("/api/v2/projects", &projects); err != nil {
+			return fmt.Errorf("failed to fetch projects: %w", err)
 		}
 
 		utils.DivdlnL()
@@ -27,6 +27,7 @@ var ListProjectsCmd = &cobra.Command{
 			fmt.Printf("%d. %s\n", i+1, project)
 		}
 		utils.DivdlnS()
+		return nil
 	},
 }
 

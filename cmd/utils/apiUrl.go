@@ -1,29 +1,32 @@
 package utils
 
 import (
-	"github.com/spf13/viper"
-	"log"
+	"fmt"
 	"net/url"
+
+	"github.com/spf13/viper"
 )
 
-// GetBaseURL Import baseUrl from config.yaml
-func GetBaseURL() *url.URL {
+// GetBaseURL returns the base URL from config.yaml or an error if not configured.
+func GetBaseURL() (*url.URL, error) {
 	baseUrlString := viper.GetString("api.base_url")
 	if baseUrlString == "" {
-		log.Fatal("Base API URL is not set in the configuration file")
+		return nil, fmt.Errorf("base API URL is not set (use 'ftsctl config set-base-url' to configure)")
 	}
 
-	// Parse baseUrl into url.URL
 	baseUrl, err := url.Parse(baseUrlString)
 	if err != nil {
-		log.Fatalf("Invalid URL format: %v", err)
+		return nil, fmt.Errorf("invalid URL format: %w", err)
 	}
 
-	return baseUrl
+	return baseUrl, nil
 }
 
-// BuildApiUrl combines the base URL with a specific API endpoint
-
-func BuildApiUrl(endpoint string) string {
-	return GetBaseURL().ResolveReference(&url.URL{Path: endpoint}).String()
+// BuildApiUrl combines the base URL with a specific API endpoint.
+func BuildApiUrl(endpoint string) (string, error) {
+	baseUrl, err := GetBaseURL()
+	if err != nil {
+		return "", err
+	}
+	return baseUrl.ResolveReference(&url.URL{Path: endpoint}).String(), nil
 }

@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"log/slog"
-	"os"
 
 	"ftsctl/cmd/utils"
 
@@ -18,23 +17,20 @@ var SetBaseUrlCmd = &cobra.Command{
 Example:
   ftsctl config set-base-url http://localhost:8080
   ftsctl config set-base-url https://api.example.com`,
-	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Args:         cobra.ExactArgs(1),
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		urlArg := args[0]
 
 		validatedUrl, err := utils.ValidateURL(urlArg)
 		if err != nil {
-			slog.Error("URL validation failed", "url", urlArg, "error", err)
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("URL validation failed: %w", err)
 		}
 
 		slog.Debug("Validated URL", "url", validatedUrl)
 
 		if err := utils.WriteConfig(validatedUrl); err != nil {
-			slog.Error("Failed to write config", "error", err)
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("failed to write configuration: %w", err)
 		}
 
 		configPath, err := utils.GetConfigPath()
@@ -49,6 +45,7 @@ Example:
 		fmt.Printf("Base URL: %s\n", validatedUrl)
 		fmt.Printf("Config file: %s\n", configPath)
 		utils.DivdlnS()
+		return nil
 	},
 }
 

@@ -11,15 +11,12 @@ var Cmd = &cobra.Command{
 	Short: "Manage CLI configuration",
 	Long: `Provides commands to manage ftsctl configuration,
 including viewing current settings and updating the base API URL.`,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Run: func(cmd *cobra.Command, args []string) {
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			fmt.Println("Please specify a subcommand. Use 'ftsctl config --help' to see available options.")
-			return
+			return fmt.Errorf("please specify a subcommand (use '%s --help' to see available options)", cmd.CommandPath())
 		}
-		fmt.Printf("Error: unknown subcommand '%s'\n", args[0])
-		fmt.Println("Use 'ftsctl config --help' to see available subcommands.")
+		return fmt.Errorf("unknown subcommand '%s' (use '%s --help' to see available subcommands)", args[0], cmd.CommandPath())
 	},
 }
 

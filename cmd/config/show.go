@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"log/slog"
-	"os"
 
 	"ftsctl/cmd/utils"
 
@@ -12,15 +11,14 @@ import (
 )
 
 var ShowCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Display current configuration",
-	Long:  `Display the current configuration settings.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:          "show",
+	Short:        "Display current configuration",
+	Long:         `Display the current configuration settings.`,
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		configPath, err := utils.GetConfigPath()
 		if err != nil {
-			slog.Error("Failed to get config path", "error", err)
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("failed to get config path: %w", err)
 		}
 
 		if !utils.ConfigExists() {
@@ -29,7 +27,7 @@ var ShowCmd = &cobra.Command{
 			fmt.Printf("Expected location: %s\n", configPath)
 			fmt.Println("\nRun 'ftsctl config set-base-url <url>' to create one.")
 			utils.DivdlnL()
-			return
+			return nil
 		}
 
 		baseUrl := viper.GetString("api.base_url")
@@ -42,6 +40,7 @@ var ShowCmd = &cobra.Command{
 		utils.DivdlnS()
 
 		slog.Debug("Displayed config", "base_url", baseUrl, "path", configPath)
+		return nil
 	},
 }
 

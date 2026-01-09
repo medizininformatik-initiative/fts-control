@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"log/slog"
 	"time"
 )
 
@@ -68,38 +67,4 @@ func PrintProcessStatus(p Process) {
 	fmt.Printf("DeidentifiedBundles: %d\n", p.DeidentifiedBundles)
 	fmt.Printf("SentBundles: %d\n", p.SentBundles)
 	fmt.Printf("SkippedBundles: %d\n", p.SkippedBundles)
-}
-
-// LogHTTPError logs an HTTP error appropriately and returns true if an error was handled.
-func LogHTTPError(err error, context string) bool {
-	if err == nil {
-		return false
-	}
-
-	if httpErr, ok := IsHTTPError(err); ok {
-		slog.Error("API request failed", "context", context, "status", httpErr.Status, "details", httpErr.Body)
-	} else {
-		slog.Error("Request failed", "context", context, "error", err)
-	}
-	return true
-}
-
-// PrintHTTPError prints an HTTP error in a user-friendly format and returns true if an error was handled.
-// Use this when you want to display error details to the user (not just log them).
-func PrintHTTPError(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	DivdlnL()
-	if httpErr, ok := IsHTTPError(err); ok {
-		fmt.Printf("Request failed! Response Status: %s\n", httpErr.Status)
-		if httpErr.Body != "" {
-			fmt.Printf("Server response body:\n%s\n", httpErr.Body)
-		}
-	} else {
-		slog.Error("Request failed", "error", err)
-	}
-	DivdlnL()
-	return true
 }
