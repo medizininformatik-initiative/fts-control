@@ -12,19 +12,15 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "process",
 	Short: "Inspect and monitor transfer processes",
-	Long: `Provides commands to inspect and monitor transfer processes, 
-including listing all available processes and showing the status 
+	Long: `Provides commands to inspect and monitor transfer processes,
+including listing all available processes and showing the status
 of a specific process.`,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Run: func(cmd *cobra.Command, args []string) {
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			fmt.Println("Please specify a subcommand. Use 'ftsctl process --help' to see available options.")
-			return
+			return fmt.Errorf("please specify a subcommand (use '%s --help' to see available options)", cmd.CommandPath())
 		}
-		// unknown subcommand
-		fmt.Printf("Error: unknown subcommand '%s'\n", args[0])
-		fmt.Println("Use 'ftsctl process --help' to see available subcommands.")
+		return fmt.Errorf("unknown subcommand '%s' (use '%s --help' to see available subcommands)", args[0], cmd.CommandPath())
 	},
 }
 

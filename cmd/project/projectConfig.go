@@ -78,22 +78,16 @@ type ResearchDomainAgent struct {
 var PrjName string
 
 var ConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Project configuration",
-	Long:  `Shows the project configuration of the selected project.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if !cmd.Flags().Changed("projectName") {
-			utils.DivdlnL()
-			fmt.Printf("Warning: No --projectName (-n) specified.\n\nPlease set the Flag to retrieve the Project Configuration of a Project.\n")
-			utils.DivdlnL()
-			return
-		}
-
+	Use:          "config",
+	Short:        "Project configuration",
+	Long:         `Shows the project configuration of the selected project.`,
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		client := utils.NewClient()
 		var pConfig Config
 
-		if err := client.GetJSON("/api/v2/projects/"+PrjName, &pConfig); utils.LogHTTPError(err, "fetch project config") {
-			return
+		if err := client.GetJSON("/api/v2/projects/"+PrjName, &pConfig); err != nil {
+			return fmt.Errorf("failed to fetch configuration for project %q: %w", PrjName, err)
 		}
 
 		// Formatted Output
@@ -132,10 +126,12 @@ var ConfigCmd = &cobra.Command{
 		fmt.Printf("  Server BaseURL: %s\n", pConfig.BundleSender.ResearchDomainAgent.Server.BaseUrl)
 		fmt.Printf("  Project: %s\n", pConfig.BundleSender.ResearchDomainAgent.Project)
 		utils.DivdlnS()
+		return nil
 	},
 }
 
 func init() {
-	ConfigCmd.Flags().StringVarP(&PrjName, "projectName", "n", "", "Please Enter the Name of the Project")
+	ConfigCmd.Flags().StringVarP(&PrjName, "projectName", "n", "", "Name of the project")
+	_ = ConfigCmd.MarkFlagRequired("projectName")
 	Cmd.AddCommand(ConfigCmd)
 }

@@ -13,18 +13,14 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "transfer",
 	Short: "Start transfer processes",
-	Long: `Provides commands to start transfer processes, 
+	Long: `Provides commands to start transfer processes,
 such as initiating a transfer of consented patients in a project.`,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Run: func(cmd *cobra.Command, args []string) {
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			fmt.Println("Please specify a subcommand. Use 'ftsctl transfer --help' to see available options.")
-			return
+			return fmt.Errorf("please specify a subcommand (use '%s --help' to see available options)", cmd.CommandPath())
 		}
-		// unknown subcommand
-		fmt.Printf("Error: unknown subcommand '%s'\n", args[0])
-		fmt.Println("Use 'ftsctl transfer --help' to see available subcommands.")
+		return fmt.Errorf("unknown subcommand '%s' (use '%s --help' to see available subcommands)", args[0], cmd.CommandPath())
 	},
 }
 

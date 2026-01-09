@@ -12,19 +12,15 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "project",
 	Short: "Inspect and monitor projects",
-	Long: `Provides commands to	inspect projects, 
-including listing all available projects and showing the 
+	Long: `Provides commands to	inspect projects,
+including listing all available projects and showing the
 configuration of a selected project.`,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	Run: func(cmd *cobra.Command, args []string) {
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			fmt.Println("Please specify a subcommand. Use 'ftsctl project --help' to see available options.")
-			return
+			return fmt.Errorf("please specify a subcommand (use '%s --help' to see available options)", cmd.CommandPath())
 		}
-		// unknown subcommand
-		fmt.Printf("Error: unknown subcommand '%s'\n", args[0])
-		fmt.Println("Use 'ftsctl project --help' to see available subcommands.")
+		return fmt.Errorf("unknown subcommand '%s' (use '%s --help' to see available subcommands)", args[0], cmd.CommandPath())
 	},
 }
 
