@@ -2,9 +2,11 @@ package transfer
 
 import (
 	"fmt"
-	"ftsctl/cmd/utils"
+	"io"
 	"log/slog"
 	"strings"
+
+	"ftsctl/cmd/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -25,31 +27,37 @@ patients for the specified project.`,
 			ids = strings.Split(idsStr, ",")
 		}
 
-		client := utils.NewClient()
-		endpoint := fmt.Sprintf("/api/v2/process/%s/start", projectName)
-
-		var body interface{}
-		if len(ids) > 0 {
-			body = ids
-		}
-
-		if err := client.PostJSON(endpoint, body, nil); err != nil {
-			return fmt.Errorf("failed to start transfer for project %q: %w", projectName, err)
-		}
-
-		utils.DivdlnL()
-		if len(ids) > 0 {
-			fmt.Printf("Transfer of project '%s' has started with the following patient IDs:\n", projectName)
-			for _, id := range ids {
-				fmt.Printf("   - %s\n", id)
-			}
-		} else {
-			fmt.Printf("Transfer of project '%s' has started for all consented patients.\n", projectName)
-		}
-		slog.Debug("Transfer request completed", "project", projectName)
-		utils.DivdlnS()
-		return nil
+		return ExecuteStartTransfer(utils.NewClient(), cmd.OutOrStdout(), projectName, ids)
 	},
+}
+
+// ExecuteStartTransfer starts a transfer for the given project.
+// If ids is empty/nil, transfers all consented patients.
+// This function is exported for testing.
+func ExecuteStartTransfer(client *utils.Client, w io.Writer, projectName string, ids []string) error {
+	endpoint := fmt.Sprintf("/api/v2/process/%s/start", projectName)
+
+	var body interface{}
+	if len(ids) > 0 {
+		body = ids
+	}
+
+	if err := client.PostJSON(endpoint, body, nil); err != nil {
+		return fmt.Errorf("failed to start transfer for project %q: %w", projectName, err)
+	}
+
+	utils.FprintDivdlnL(w)
+	if len(ids) > 0 {
+		fmt.Fprintf(w, "Transfer of project '%s' has started with the following patient IDs:\n", projectName)
+		for _, id := range ids {
+			fmt.Fprintf(w, "   - %s\n", id)
+		}
+	} else {
+		fmt.Fprintf(w, "Transfer of project '%s' has started for all consented patients.\n", projectName)
+	}
+	slog.Debug("Transfer request completed", "project", projectName)
+	utils.FprintDivdlnS(w)
+	return nil
 }
 
 func init() {
