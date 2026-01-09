@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"ftsctl/cmd/testutil"
+	"ftsctl/cmd/utils"
 )
 
 func TestExecuteListProjects_Success(t *testing.T) {
@@ -49,8 +50,8 @@ func TestExecuteListProjects_Success(t *testing.T) {
 				if req.Method != "GET" {
 					t.Errorf("Expected GET method, got: %s", req.Method)
 				}
-				if !strings.HasSuffix(req.URL.Path, "/api/v2/projects") {
-					t.Errorf("Expected path to end with /api/v2/projects, got: %s", req.URL.Path)
+				if !strings.HasSuffix(req.URL.Path, utils.EndpointProjects) {
+					t.Errorf("Expected path to end with %s, got: %s", utils.EndpointProjects, req.URL.Path)
 				}
 				return h.MockResponse(200, tt.response), nil
 			}

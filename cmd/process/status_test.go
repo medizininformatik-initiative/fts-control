@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"ftsctl/cmd/testutil"
+	"ftsctl/cmd/utils"
 )
 
 func TestExecuteProcessStatus_Success(t *testing.T) {
@@ -50,8 +51,9 @@ func TestExecuteProcessStatus_Success(t *testing.T) {
 				if req.Method != "GET" {
 					t.Errorf("Expected GET method, got: %s", req.Method)
 				}
-				if !strings.Contains(req.URL.Path, "/api/v2/process/status/") {
-					t.Errorf("Expected path to contain /api/v2/process/status/, got: %s", req.URL.Path)
+				expectedPath := utils.EndpointProcessStatus(tt.processID)
+				if !strings.Contains(req.URL.Path, expectedPath) {
+					t.Errorf("Expected path to contain %s, got: %s", expectedPath, req.URL.Path)
 				}
 				if !strings.HasSuffix(req.URL.Path, tt.processID) {
 					t.Errorf("Expected path to end with %s, got: %s", tt.processID, req.URL.Path)

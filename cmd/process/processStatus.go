@@ -25,7 +25,7 @@ var StatusCmd = &cobra.Command{
 func ExecuteProcessStatus(client *utils.Client, w io.Writer, procId string) error {
 	var prcss utils.Process
 
-	if err := client.GetJSON("/api/v2/process/status/"+procId, &prcss); err != nil {
+	if err := client.GetJSON(utils.EndpointProcessStatus(procId), &prcss); err != nil {
 		return fmt.Errorf("failed to fetch status for process %q: %w", procId, err)
 	}
 

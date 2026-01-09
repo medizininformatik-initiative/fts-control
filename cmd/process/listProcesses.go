@@ -24,7 +24,7 @@ var listProcessesCmd = &cobra.Command{
 func ExecuteListProcesses(client *utils.Client, w io.Writer) error {
 	var processes []utils.Process
 
-	if err := client.GetJSON("/api/v2/process/statuses", &processes); err != nil {
+	if err := client.GetJSON(utils.EndpointProcessStatuses, &processes); err != nil {
 		return fmt.Errorf("failed to fetch process statuses: %w", err)
 	}
 
