@@ -16,12 +16,41 @@ const (
 
 // ConfigFile represents the structure of config.yaml
 type ConfigFile struct {
-	Api ApiConfig `yaml:"api"`
+	Api  ApiConfig   `yaml:"api"`
+	Auth *AuthConfig `yaml:"auth,omitempty"`
 }
 
 // ApiConfig represents the api section of config
 type ApiConfig struct {
 	BaseUrl string `yaml:"base_url"`
+}
+
+// AuthConfig represents authentication configuration.
+// Only one authentication method should be configured at a time.
+type AuthConfig struct {
+	Basic       *BasicAuthConfig       `yaml:"basic,omitempty"`
+	OAuth2      *OAuth2Config          `yaml:"oauth2,omitempty"`
+	Certificate *CertificateAuthConfig `yaml:"certificate,omitempty"`
+}
+
+// BasicAuthConfig represents HTTP Basic authentication credentials.
+type BasicAuthConfig struct {
+	Username string `yaml:"user" mapstructure:"user"`
+	Password string `yaml:"password" mapstructure:"password"` // Supports ${VAR} syntax for env vars
+}
+
+// OAuth2Config represents OAuth2 client credentials configuration.
+type OAuth2Config struct {
+	TokenURL     string `yaml:"token_url" mapstructure:"token_url"`
+	ClientID     string `yaml:"client_id" mapstructure:"client_id"`
+	ClientSecret string `yaml:"client_secret" mapstructure:"client_secret"` // Supports ${VAR} syntax for env vars
+}
+
+// CertificateAuthConfig represents mutual TLS authentication configuration.
+type CertificateAuthConfig struct {
+	CertFile string `yaml:"cert_file" mapstructure:"cert_file"`
+	KeyFile  string `yaml:"key_file" mapstructure:"key_file"`
+	CAFile   string `yaml:"ca_file,omitempty" mapstructure:"ca_file"` // Optional CA certificate
 }
 
 // GetConfigDir returns the OS-specific config directory for ftsctl

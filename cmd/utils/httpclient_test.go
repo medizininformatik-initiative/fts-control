@@ -614,6 +614,33 @@ func TestClient_WithAPIKey(t *testing.T) {
 	}
 }
 
+func TestClient_WithBasicAuth(t *testing.T) {
+	var capturedHeaders http.Header
+	mockClient := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			capturedHeaders = req.Header
+			return newMockResponse(200, `{"success": true}`), nil
+		},
+	}
+
+	client := NewClientWithHTTPClient(mockClient).
+		WithBasicAuth("testuser", "testpass")
+
+	var result map[string]bool
+	err := client.GetJSON(context.Background(), "/api/v2/test", &result)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	authHeader := capturedHeaders.Get("Authorization")
+	// Basic auth should be "Basic base64(user:pass)"
+	// "testuser:testpass" in base64 is "dGVzdHVzZXI6dGVzdHBhc3M="
+	expected := "Basic dGVzdHVzZXI6dGVzdHBhc3M="
+	if authHeader != expected {
+		t.Errorf("Expected Authorization to be '%s', got: %s", expected, authHeader)
+	}
+}
+
 func TestClient_ImmutableHeaders(t *testing.T) {
 	baseClient := NewClientWithHTTPClient(&MockHTTPClient{
 		DoFunc: func(req *http.Request) (*http.Response, error) {

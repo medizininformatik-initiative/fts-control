@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -138,6 +139,15 @@ func (c *Client) WithAPIKey(key string) *Client {
 	return c.WithHeader("X-API-Key", key)
 }
 
+// WithBasicAuth returns a new Client with HTTP Basic authentication.
+// Sets the Authorization header to "Basic {base64(username:password)}".
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithBasicAuth(username, password string) *Client {
+	auth := username + ":" + password
+	encoded := base64.StdEncoding.EncodeToString([]byte(auth))
+	return c.WithHeader("Authorization", "Basic "+encoded)
+}
+
 // WithBaseBackoff returns a new Client with the specified base backoff duration.
 // This is primarily useful in tests to speed up retry scenarios.
 // Returns a new Client; does not modify the receiver.
@@ -151,15 +161,16 @@ func (c *Client) WithBaseBackoff(d time.Duration) *Client {
 // Does not overwrite headers already set on the request.
 // This preserves request-specific headers like Content-Type.
 func (c *Client) applyHeaders(req *http.Request) {
-	if c.headers == nil || req == nil {
+	if req == nil || c.headers == nil {
 		return
 	}
 
 	for key, values := range c.headers {
-		if req.Header.Get(key) == "" {
-			for _, value := range values {
-				req.Header.Add(key, value)
-			}
+		if req.Header.Get(key) != "" {
+			continue
+		}
+		for _, value := range values {
+			req.Header.Add(key, value)
 		}
 	}
 }
