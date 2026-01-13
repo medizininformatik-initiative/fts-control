@@ -423,62 +423,6 @@ func TestAuthMethodString(t *testing.T) {
 	}
 }
 
-func TestFetchOAuth2Token(t *testing.T) {
-	// Set up mock OAuth2 server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			t.Errorf("expected POST, got %s", r.Method)
-		}
-
-		if err := r.ParseForm(); err != nil {
-			t.Errorf("failed to parse form: %v", err)
-		}
-
-		if r.FormValue("grant_type") != "client_credentials" {
-			t.Errorf("expected grant_type=client_credentials, got %s", r.FormValue("grant_type"))
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"access_token": "test_token", "token_type": "Bearer", "expires_in": 3600}`))
-	}))
-	defer server.Close()
-
-	config := &OAuth2Config{
-		TokenURL:     server.URL,
-		ClientID:     "test_client",
-		ClientSecret: "test_secret",
-	}
-
-	token, err := fetchOAuth2Token(config)
-	if err != nil {
-		t.Fatalf("fetchOAuth2Token() error = %v", err)
-	}
-
-	if token != "test_token" {
-		t.Errorf("fetchOAuth2Token() = %q, want %q", token, "test_token")
-	}
-}
-
-func TestFetchOAuth2Token_Error(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusUnauthorized)
-		_, _ = w.Write([]byte(`{"error": "invalid_client"}`))
-	}))
-	defer server.Close()
-
-	config := &OAuth2Config{
-		TokenURL:     server.URL,
-		ClientID:     "wrong_client",
-		ClientSecret: "wrong_secret",
-	}
-
-	_, err := fetchOAuth2Token(config)
-	if err == nil {
-		t.Error("fetchOAuth2Token() expected error for 401 response")
-	}
-}
-
 func TestGetAuthenticatedClient_NoAuth(t *testing.T) {
 	// Reset viper
 	viper.Reset()

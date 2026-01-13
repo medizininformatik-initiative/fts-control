@@ -3,9 +3,7 @@ package utils
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -211,7 +209,8 @@ func applyAuthentication(client *Client, method AuthMethod, auth *AuthConfig) (*
 	case AuthMethodBasic:
 		return client.WithBasicAuth(auth.Basic.Username, auth.Basic.Password), nil
 	case AuthMethodOAuth2:
-		token, err := fetchOAuth2Token(auth.OAuth2)
+		tokenProvider := NewOAuth2TokenProvider(auth.OAuth2)
+		token, err := tokenProvider.GetToken()
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch OAuth2 token: %w", err)
 		}
@@ -220,42 +219,6 @@ func applyAuthentication(client *Client, method AuthMethod, auth *AuthConfig) (*
 		return createCertificateClient(auth.Certificate)
 	}
 	return client, nil
-}
-
-// fetchOAuth2Token obtains an OAuth2 access token using client credentials flow.
-func fetchOAuth2Token(oauth2 *OAuth2Config) (string, error) {
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	data.Set("client_id", oauth2.ClientID)
-	data.Set("client_secret", oauth2.ClientSecret)
-
-	// Use client with timeout to prevent hanging
-	httpClient := &http.Client{Timeout: 30 * time.Second}
-	resp, err := httpClient.PostForm(oauth2.TokenURL, data)
-	if err != nil {
-		return "", fmt.Errorf("token request failed: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("token request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var tokenResp struct {
-		AccessToken string `json:"access_token"`
-		TokenType   string `json:"token_type"`
-		ExpiresIn   int    `json:"expires_in"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		return "", fmt.Errorf("failed to decode token response: %w", err)
-	}
-
-	if tokenResp.AccessToken == "" {
-		return "", fmt.Errorf("access_token not found in response")
-	}
-
-	return tokenResp.AccessToken, nil
 }
 
 // createCertificateClient creates a client configured for mutual TLS.
