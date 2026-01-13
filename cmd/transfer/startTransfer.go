@@ -20,6 +20,10 @@ body, or if none are provided, start a transfer of all consented
 patients for the specified project.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := utils.GetAuthenticatedClient()
+		if err != nil {
+			return fmt.Errorf("authentication error: %w", err)
+		}
 		projectName, _ := cmd.Flags().GetString("projectName")
 		idsStr, _ := cmd.Flags().GetString("ids")
 
@@ -28,7 +32,7 @@ patients for the specified project.`,
 			ids = strings.Split(idsStr, ",")
 		}
 
-		return ExecuteStartTransfer(utils.NewClient(), cmd.OutOrStdout(), projectName, ids)
+		return ExecuteStartTransfer(client, cmd.OutOrStdout(), projectName, ids)
 	},
 }
 

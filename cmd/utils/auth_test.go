@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -489,6 +490,138 @@ func TestGetAuthenticatedClient_BasicAuth(t *testing.T) {
 	}
 	if client == nil {
 		t.Error("GetAuthenticatedClient() returned nil client")
+	}
+}
+
+func TestGetAuthenticatedClient_BasicAuth_SendsAuthorizationHeader(t *testing.T) {
+	// Set up a test server that verifies the Authorization header
+	var capturedAuthHeader string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`["Project1"]`))
+	}))
+	defer server.Close()
+
+	viper.Reset()
+	viper.Set("api.base_url", server.URL)
+	viper.Set("auth.basic.user", "testuser")
+	viper.Set("auth.basic.password", "testpass")
+
+	client, err := GetAuthenticatedClient()
+	if err != nil {
+		t.Fatalf("GetAuthenticatedClient() error = %v", err)
+	}
+
+	// Make a request to verify the header is sent
+	var result []string
+	err = client.GetJSON(context.Background(), "/api/v2/projects", &result)
+	if err != nil {
+		t.Fatalf("GetJSON() error = %v", err)
+	}
+
+	// Verify Authorization header
+	// "testuser:testpass" in base64 is "dGVzdHVzZXI6dGVzdHBhc3M="
+	expectedHeader := "Basic dGVzdHVzZXI6dGVzdHBhc3M="
+	if capturedAuthHeader != expectedHeader {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, expectedHeader)
+	}
+}
+
+func TestGetAuthenticatedClient_BasicAuth_WithEnvVarExpansion(t *testing.T) {
+	t.Setenv("TEST_AUTH_PASSWORD", "secretpass")
+
+	var capturedAuthHeader string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer server.Close()
+
+	viper.Reset()
+	viper.Set("api.base_url", server.URL)
+	viper.Set("auth.basic.user", "admin")
+	viper.Set("auth.basic.password", "${TEST_AUTH_PASSWORD}")
+
+	client, err := GetAuthenticatedClient()
+	if err != nil {
+		t.Fatalf("GetAuthenticatedClient() error = %v", err)
+	}
+
+	var result []string
+	err = client.GetJSON(context.Background(), "/api/v2/projects", &result)
+	if err != nil {
+		t.Fatalf("GetJSON() error = %v", err)
+	}
+
+	// "admin:secretpass" in base64 is "YWRtaW46c2VjcmV0cGFzcw=="
+	expectedHeader := "Basic YWRtaW46c2VjcmV0cGFzcw=="
+	if capturedAuthHeader != expectedHeader {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, expectedHeader)
+	}
+}
+
+func TestGetAuthenticatedClient_BasicAuth_POST_SendsAuthorizationHeader(t *testing.T) {
+	var capturedAuthHeader string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusAccepted)
+	}))
+	defer server.Close()
+
+	viper.Reset()
+	viper.Set("api.base_url", server.URL)
+	viper.Set("auth.basic.user", "user")
+	viper.Set("auth.basic.password", "pass")
+
+	client, err := GetAuthenticatedClient()
+	if err != nil {
+		t.Fatalf("GetAuthenticatedClient() error = %v", err)
+	}
+
+	// Make a POST request
+	err = client.PostJSON(context.Background(), "/api/v2/process/start", nil, nil)
+	if err != nil {
+		t.Fatalf("PostJSON() error = %v", err)
+	}
+
+	// "user:pass" in base64 is "dXNlcjpwYXNz"
+	expectedHeader := "Basic dXNlcjpwYXNz"
+	if capturedAuthHeader != expectedHeader {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, expectedHeader)
+	}
+}
+
+func TestGetAuthenticatedClient_NoAuth_NoAuthorizationHeader(t *testing.T) {
+	var capturedAuthHeader string
+	var headerPresent bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedAuthHeader = r.Header.Get("Authorization")
+		_, headerPresent = r.Header["Authorization"]
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer server.Close()
+
+	viper.Reset()
+	viper.Set("api.base_url", server.URL)
+	// No auth configured
+
+	client, err := GetAuthenticatedClient()
+	if err != nil {
+		t.Fatalf("GetAuthenticatedClient() error = %v", err)
+	}
+
+	var result []string
+	err = client.GetJSON(context.Background(), "/api/v2/projects", &result)
+	if err != nil {
+		t.Fatalf("GetJSON() error = %v", err)
+	}
+
+	if headerPresent || capturedAuthHeader != "" {
+		t.Errorf("Authorization header should not be present when no auth configured, got: %q", capturedAuthHeader)
 	}
 }
 

@@ -16,7 +16,11 @@ var listProcessesCmd = &cobra.Command{
 	Long:         `Lists all available transfer process statuses.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return ExecuteListProcesses(utils.NewClient(), cmd.OutOrStdout())
+		client, err := utils.GetAuthenticatedClient()
+		if err != nil {
+			return fmt.Errorf("authentication error: %w", err)
+		}
+		return ExecuteListProcesses(client, cmd.OutOrStdout())
 	},
 }
 

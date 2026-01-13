@@ -16,7 +16,11 @@ var ListProjectsCmd = &cobra.Command{
 	Long:         `List of all available projects from the API.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return ExecuteListProjects(utils.NewClient(), cmd.OutOrStdout())
+		client, err := utils.GetAuthenticatedClient()
+		if err != nil {
+			return fmt.Errorf("authentication error: %w", err)
+		}
+		return ExecuteListProjects(client, cmd.OutOrStdout())
 	},
 }
 
