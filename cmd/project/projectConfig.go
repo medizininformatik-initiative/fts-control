@@ -87,8 +87,12 @@ var ConfigCmd = &cobra.Command{
 	Long:         `Shows the project configuration of the selected project.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := utils.GetAuthenticatedClient()
+		if err != nil {
+			return fmt.Errorf("authentication error: %w", err)
+		}
 		projectName, _ := cmd.Flags().GetString("projectName")
-		return ExecuteProjectConfig(utils.NewClient(), cmd.OutOrStdout(), projectName)
+		return ExecuteProjectConfig(client, cmd.OutOrStdout(), projectName)
 	},
 }
 

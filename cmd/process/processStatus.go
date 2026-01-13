@@ -16,8 +16,12 @@ var StatusCmd = &cobra.Command{
 	Long:         `Shows the process status of the selected process ID`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := utils.GetAuthenticatedClient()
+		if err != nil {
+			return fmt.Errorf("authentication error: %w", err)
+		}
 		processId, _ := cmd.Flags().GetString("processId")
-		return ExecuteProcessStatus(utils.NewClient(), cmd.OutOrStdout(), processId)
+		return ExecuteProcessStatus(client, cmd.OutOrStdout(), processId)
 	},
 }
 
