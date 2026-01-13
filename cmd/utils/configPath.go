@@ -44,6 +44,7 @@ type OAuth2Config struct {
 	TokenURL     string `yaml:"token_url" mapstructure:"token_url"`
 	ClientID     string `yaml:"client_id" mapstructure:"client_id"`
 	ClientSecret string `yaml:"client_secret" mapstructure:"client_secret"` // Supports ${VAR} syntax for env vars
+	Scope        string `yaml:"scope,omitempty" mapstructure:"scope"`       // Optional scope parameter
 }
 
 // CertificateAuthConfig represents mutual TLS authentication configuration.
