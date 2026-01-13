@@ -71,40 +71,55 @@ func TestExpandEnvVars(t *testing.T) {
 	}
 }
 
-func TestValidateAuthConfig_NilConfig(t *testing.T) {
-	err := ValidateAuthConfig(nil)
-	if err != nil {
-		t.Errorf("ValidateAuthConfig(nil) = %v, want nil", err)
-	}
-}
-
-func TestValidateAuthConfig_EmptyConfig(t *testing.T) {
-	auth := &AuthConfig{}
-	err := ValidateAuthConfig(auth)
-	if err == nil {
-		t.Error("ValidateAuthConfig(empty) should return error")
-	}
-}
-
-func TestValidateAuthConfig_MultipleMethodsError(t *testing.T) {
-	auth := &AuthConfig{
-		Basic: &BasicAuthConfig{
-			Username: "user",
-			Password: "pass",
+func TestValidateAuthConfig_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name      string
+		config    *AuthConfig
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			name:    "nil config is valid",
+			config:  nil,
+			wantErr: false,
 		},
-		OAuth2: &OAuth2Config{
-			TokenURL:     "https://auth.example.com/token",
-			ClientID:     "client",
-			ClientSecret: "secret",
+		{
+			name:      "empty config returns error",
+			config:    &AuthConfig{},
+			wantErr:   true,
+			errSubstr: "no authentication method configured",
+		},
+		{
+			name: "multiple methods returns error",
+			config: &AuthConfig{
+				Basic: &BasicAuthConfig{
+					Username: "user",
+					Password: "pass",
+				},
+				OAuth2: &OAuth2Config{
+					TokenURL:     "https://auth.example.com/token",
+					ClientID:     "client",
+					ClientSecret: "secret",
+				},
+			},
+			wantErr:   true,
+			errSubstr: "only one authentication method can be configured at a time",
 		},
 	}
 
-	err := ValidateAuthConfig(auth)
-	if err == nil {
-		t.Error("ValidateAuthConfig with multiple methods should return error")
-	}
-	if err != nil && err.Error() != "only one authentication method can be configured at a time" {
-		t.Errorf("unexpected error: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAuthConfig(tt.config)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error containing %q, got nil", tt.errSubstr)
+				} else if !strings.Contains(err.Error(), tt.errSubstr) {
+					t.Errorf("expected error containing %q, got %q", tt.errSubstr, err.Error())
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
 	}
 }
 
