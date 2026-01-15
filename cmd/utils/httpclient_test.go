@@ -790,6 +790,46 @@ func TestClient_WithBaseBackoff_Immutable(t *testing.T) {
 	}
 }
 
+func TestClient_WithHTTPClient(t *testing.T) {
+	originalMock := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			return newMockResponse(200, `{}`), nil
+		},
+	}
+	newMock := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			return newMockResponse(201, `{}`), nil
+		},
+	}
+
+	originalClient := NewClientWithHTTPClient(originalMock).
+		WithHeader("X-Custom", "value").
+		WithBaseBackoff(5 * time.Second)
+
+	// Create new client with different HTTP client
+	newClient := originalClient.WithHTTPClient(newMock)
+
+	// Original client should be unchanged
+	if originalClient.httpClient != originalMock {
+		t.Error("Original client's httpClient should not be modified")
+	}
+
+	// New client should have the new HTTP client
+	if newClient.httpClient != newMock {
+		t.Error("New client should have the new httpClient")
+	}
+
+	// New client should preserve headers from original
+	if newClient.headers.Get("X-Custom") != "value" {
+		t.Error("New client should preserve headers from original")
+	}
+
+	// New client should preserve other settings
+	if newClient.baseBackoff != 5*time.Second {
+		t.Error("New client should preserve baseBackoff from original")
+	}
+}
+
 func TestClient_HeadersInPostJSON(t *testing.T) {
 	mockClient := &MockHTTPClient{
 		DoFunc: func(req *http.Request) (*http.Response, error) {

@@ -1,14 +1,10 @@
 package utils
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"regexp"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -130,30 +126,6 @@ func validateOAuth2Auth(oauth2 *OAuth2Config) error {
 	return nil
 }
 
-func validateCertificateAuth(cert *CertificateAuthConfig) error {
-	if cert.CertFile == "" {
-		return fmt.Errorf("auth.certificate.cert_file is required")
-	}
-	if cert.KeyFile == "" {
-		return fmt.Errorf("auth.certificate.key_file is required")
-	}
-	if err := validateFileExists(cert.CertFile, "certificate file"); err != nil {
-		return err
-	}
-	if err := validateFileExists(cert.KeyFile, "certificate key file"); err != nil {
-		return err
-	}
-	if cert.CAFile != "" {
-		if err := validateFileExists(cert.CAFile, "CA certificate file"); err != nil {
-			return err
-		}
-	}
-	if _, err := tls.LoadX509KeyPair(cert.CertFile, cert.KeyFile); err != nil {
-		return fmt.Errorf("failed to load certificate: %w", err)
-	}
-	return nil
-}
-
 func validateFileExists(path, description string) error {
 	if _, err := os.Stat(path); err != nil {
 		return fmt.Errorf("%s not found: %s: %w", description, path, err)
@@ -216,48 +188,12 @@ func applyAuthentication(client *Client, method AuthMethod, auth *AuthConfig) (*
 		}
 		return client.WithBearerToken(token), nil
 	case AuthMethodCertificate:
-		return createCertificateClient(auth.Certificate)
-	}
-	return client, nil
-}
-
-// createCertificateClient creates a client configured for mutual TLS.
-func createCertificateClient(cert *CertificateAuthConfig) (*Client, error) {
-	tlsCert, err := tls.LoadX509KeyPair(cert.CertFile, cert.KeyFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load certificate: %w", err)
-	}
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{tlsCert},
-	}
-
-	if cert.CAFile != "" {
-		caCertPool, err := loadCACertPool(cert.CAFile)
-		if err != nil {
+		// Validate HTTPS is required for certificate authentication
+		baseURL := viper.GetString("api.base_url")
+		if err := validateCertificateAuthRequiresHTTPS(baseURL); err != nil {
 			return nil, err
 		}
-		tlsConfig.RootCAs = caCertPool
+		return applyCertificateAuth(client, auth.Certificate)
 	}
-
-	httpClient := &http.Client{
-		Timeout: 30 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: tlsConfig,
-		},
-	}
-
-	return NewClientWithHTTPClient(httpClient), nil
-}
-
-func loadCACertPool(caFile string) (*x509.CertPool, error) {
-	caCert, err := os.ReadFile(caFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read CA certificate: %w", err)
-	}
-	caCertPool := x509.NewCertPool()
-	if !caCertPool.AppendCertsFromPEM(caCert) {
-		return nil, fmt.Errorf("failed to parse CA certificate from %s", caFile)
-	}
-	return caCertPool, nil
+	return client, nil
 }

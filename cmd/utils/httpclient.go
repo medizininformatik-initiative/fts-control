@@ -157,6 +157,18 @@ func (c *Client) WithBaseBackoff(d time.Duration) *Client {
 	return newClient
 }
 
+// WithHTTPClient returns a new Client using the specified HTTPClient.
+// This is useful for configuring custom transports (e.g., TLS configuration for mTLS).
+// Returns a new Client; does not modify the receiver.
+func (c *Client) WithHTTPClient(httpClient HTTPClient) *Client {
+	return &Client{
+		httpClient:  httpClient,
+		maxRetries:  c.maxRetries,
+		baseBackoff: c.baseBackoff,
+		headers:     copyHeaders(c.headers),
+	}
+}
+
 // applyHeaders copies client-level headers to the request.
 // Does not overwrite headers already set on the request.
 // This preserves request-specific headers like Content-Type.
