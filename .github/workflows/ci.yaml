@@ -51,8 +51,25 @@ jobs:
           go-version: '1.25.5'
           cache: true
 
+      - name: Start Keycloak
+        run: |
+          docker compose -f test/oauth2/compose.yaml up -d --build
+          # Wait for Keycloak to become healthy (up to 3 minutes)
+          for i in {1..36}; do
+            if curl -sf http://localhost:9000/health | jq -e '.status == "UP"' > /dev/null 2>&1; then
+              echo "Keycloak is healthy"
+              break
+            fi
+            echo "Waiting for Keycloak... ($i/36)"
+            sleep 5
+          done
+
       - name: Run tests with coverage
         run: go test -v -coverprofile=coverage.txt ./...
+
+      - name: Stop Keycloak
+        if: always()
+        run: docker compose -f test/oauth2/compose.yaml down -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5

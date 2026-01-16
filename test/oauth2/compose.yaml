@@ -1,0 +1,24 @@
+name: keycloak
+
+networks:
+  agents:
+
+services:
+  keycloak:
+    build:
+      dockerfile: Dockerfile
+    command:
+    - start-dev
+    - --import-realm
+    networks: [ "agents" ]
+    ports: [ "8080:8080", "9000:9000" ]
+    volumes:
+    - ./import:/opt/keycloak/data/import
+    environment:
+      KC_HEALTH_ENABLED: true
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sSf http://localhost:9000/health > /tmp/health.json && cat /tmp/health.json | jq -e '.status == \"UP\"'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 150s
