@@ -7,3 +7,8 @@ ftsctl
 # Coverage (go test -coverprofile)
 *.out
 coverage.html
+
+# Node.js (docs)
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
