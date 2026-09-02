@@ -2,7 +2,7 @@ module ftsctl
 
 go 1.26.0
 
-toolchain go1.27.0
+toolchain go1.27.1
 
 require (
 	github.com/spf13/cobra v1.10.2
