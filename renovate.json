@@ -12,7 +12,8 @@
   ],
   "prConcurrentLimit": 1,
   "postUpdateOptions": [
-    "gomodTidy"
+    "gomodTidy",
+    "gomodUpdateImportPaths"
   ],
   "customManagers": [
     {
