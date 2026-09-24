@@ -11,6 +11,9 @@
     "dependencies"
   ],
   "prConcurrentLimit": 1,
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
   "customManagers": [
     {
       "description": [
